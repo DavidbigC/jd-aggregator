@@ -10,3 +10,4 @@
 - 2026-10-21 feat: add Chinese/APAC sources (Rebase, DeJob, MyCareersFuture)
 - 2026-10-21 feat: add poll runner with per-source intervals and a CLI
 - 2026-10-21 feat: add local web UI to browse deduped jobs
+- 2026-10-21 fix: disable 69 seed boards that return 404

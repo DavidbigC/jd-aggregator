@@ -4,7 +4,7 @@ company,website,ats,slug,origin,enabled
 21Shares,https://21shares.com,greenhouse,21shares,research,1
 a16z,,greenhouse,a16z,research,1
 Aave Labs,,lever-eu,aavelabs,verified,1
-ABC Labs,https://www.abclabs.co/,greenhouse,abclabs,research,1
+ABC Labs,https://www.abclabs.co/,greenhouse,abclabs,research+404,0
 Aconomy Labs,https://aconomy.io/,dover,f57e1278-691f-4a1c-9520-63be888d361c,research,0
 Aconomy Labs,https://aconomy.io/,dover,31232c44-7060-40f7-8401-b4060d4515a6,research,0
 Aconomy Labs,https://aconomy.io/,dover,0efe32a4-4c62-4cdb-8e18-b9f0349a1e0e,research,0
@@ -13,19 +13,19 @@ Aconomy Labs,https://aconomy.io/,dover,eddbf28d-8e51-4d5b-8601-e997073405a5,rese
 Aconomy Labs,https://aconomy.io/,dover,241b7bca-e539-43bf-9521-e0a354db0d07,research,0
 Aconomy Labs,https://aconomy.io/,dover,326aa6e2-92cb-4f50-b436-8c883cd33fdd,research,0
 Across Protocol,,ashby,risklabs,research,1
-ADDX,https://addx.co/en/,lever,addx,research,1
+ADDX,https://addx.co/en/,lever,addx,research+404,0
 Aegis Ventures,https://www.aegis.ventures/,notion,aegisventures,research,0
 Affinidi,https://www.affinidi.com/,greenhouse,affinidi,research,1
 Agora,https://www.agora.xyz/,gem,agora,research,1
 Airtm,https://www.airtm.com/en,lever,airtm,research,1
-Akash Network,,lever,akashnetwork,research,1
+Akash Network,,lever,akashnetwork,research+404,0
 Alchemy,https://www.alchemy.com,ashby,alchemy,research+verified,1
 Algorand Foundation,https://algorand.co/,bamboohr,algorandfoundation,research,1
 Alliance,https://alliance.xyz/,breezy,alliance,research,1
 Allium,https://www.allium.so,ashby,allium,research+verified,1
 Alpaca,https://alpaca.markets,greenhouse,alpaca,research,1
 Alpen,https://www.alpen.org/,ashby,alpenlabs,research,1
-Alpen,https://www.alpen.org/,greenhouse,alpenlabs,research,1
+Alpen,https://www.alpen.org/,greenhouse,alpenlabs,research+404,0
 Alphapoint,https://alphapoint.com/,jazzhr,alphapoint,research,0
 Alumni Ventures,https://www.av.vc/,greenhouse,alumniventures,research,1
 Amber Group,,ashby,amber,verified,1
@@ -42,7 +42,7 @@ Aptos Labs,https://aptosnetwork.com,greenhouse,aptoslabs,research+verified,1
 Arbitrum,,lever,arbitrumfoundation,research,1
 Arbius,https://arbius.ai/,notion,woolen-party-cfb,research,0
 Arcus,https://arcus.xyz/,gem,arcus,research,1
-Argus Labs,https://argus.gg/,ashby,argus,research,1
+Argus Labs,https://argus.gg/,ashby,argus,research+404,0
 Argus Labs,https://argus.gg/,gem,argus-labs,research,1
 Ashby,,ashby,ashby,research,1
 Astar Foundation,,greenhouse,startale,research,1
@@ -54,9 +54,9 @@ Auros,https://www.auros.global,greenhouse,aurosglobal,research,1
 Autopilot,,dover,313a9962-2230-48bd-b22d-6abc119f1ea6,research,0
 Autopilot,,dover,821c4e8e-0c0f-4c52-af98-23f371567854,research,0
 Ava Labs,https://www.avalabs.org/,ashby,ava-labs,research+verified,1
-Ava Labs,https://www.avalabs.org/,greenhouse,avalabs,research,1
+Ava Labs,https://www.avalabs.org/,greenhouse,avalabs,research+404,0
 Aven,,ashby,aven,research,1
-Axelar,,personio,interop-labs-inc,research,1
+Axelar,,personio,interop-labs-inc,research+404,0
 Axiom,https://axiom.trade,ashby,axiom,research,1
 Azra Games,,greenhouse,azragames,research,1
 Azra Games,,greenhouse,azragamesoa,research,1
@@ -70,17 +70,17 @@ Baton Corporation,https://www.batoncorporation.com/,ashby,batoncorporation,resea
 BCB Group,https://www.bcbgroup.com/,greenhouse,bcbgroup,research,1
 Beam,https://onbeam.com/,workable,onbeam,research,1
 "Belvedere Trading, LLC.",https://www.belvederetrading.com/,lever,belvederetrading,research,1
-Big Time Studios,https://www.bigtime.gg/,lever,bigtime,research,1
+Big Time Studios,https://www.bigtime.gg/,lever,bigtime,research+404,0
 Binance,,greenhouse,binance,verified,1
 Binance,,lever,binance,verified,1
-Bitcoin.com,https://bitcoin.com,bamboohr,bitcoin,research,1
+Bitcoin.com,https://bitcoin.com,bamboohr,bitcoin,research+404,0
 Bitdeer,https://www.bitdeer.com/,breezy,bitdeer,research,1
 Bitfinex,,recruitee,bitfinex,verified,1
 BitGo,,greenhouse,bitgo,research+verified,1
 Bithumb,https://www.bithumb.com,greetinghr,bithumbcorp,research,0
 BitOK,https://bitok.org,notion,evanescent-bamboo-348,research,0
 Bitpanda,https://bitpanda.com,greenhouse,bitpanda,research+verified,1
-Bitso,,bamboohr,bitso,research,1
+Bitso,,bamboohr,bitso,research+404,0
 Bitvavo,,ashby,bitvavo,verified,1
 Bitwave,https://www.bitwave.io,breezy,bitwave,research,1
 Bitwise Asset Management,,rippling,bitwise-asset-management-inc,research,1
@@ -90,20 +90,20 @@ Blockaid Ltd.,https://blockaid.io/,comeet,blockaid|69.00b,research,0
 Blockcast,https://www.blockcast.net/,notion,blockcastnet,research,0
 Blockchain.com,,greenhouse,blockchain,research+verified,1
 Blockdaemon,https://www.blockdaemon.com/,ashby,blockdaemon,research,1
-Blocknative,https://www.blocknative.com/,lever,blocknative,research,1
-Blocksize,https://blocksize.info,personio,blocksize-capital-gmbh,research,1
+Blocknative,https://www.blocknative.com/,lever,blocknative,research+404,0
+Blocksize,https://blocksize.info,personio,blocksize-capital-gmbh,research+404,0
 Blockstream,https://blockstream.com,ashby,blockstream,research,1
 Blockworks,https://blockworks.co,ashby,blockworks,research+verified,1
-Blowfish,https://blowfish.xyz,greenhouse,blowfish,research,1
+Blowfish,https://blowfish.xyz,greenhouse,blowfish,research+404,0
 Bluenote Health,,ashby,bluenote,research,1
-Bnk To The Future,https://bnktothefuture.com/,bamboohr,bnktothefuture,research,1
+Bnk To The Future,https://bnktothefuture.com/,bamboohr,bnktothefuture,research+404,0
 Braavos,https://braavos.app,notion,braavos,research,0
 Brale,https://brale.xyz,ashby,brale,research,1
 Branch,,lever,branch.gg,research,1
 Brave,,greenhouse,brave,research,1
 Breeze,,greenhouse,breezecash,research,1
-Brevan Howard Asset Management,,workday,brevanhoward|wd3|wday,research,1
-BSV Association,https://bsvblockchain.org/,bamboohr,bsvassociation,research,1
+Brevan Howard Asset Management,,workday,brevanhoward|wd3|wday,research+404,0
+BSV Association,https://bsvblockchain.org/,bamboohr,bsvassociation,research+404,0
 BTC Inc,https://b.tc,rippling,btc-inc,research,1
 "Built Technologies, Inc.",https://getbuilt.com/,greenhouse,getbuilt,research,1
 Bullish,https://bullish.com,workday,bullish|wd3|bullish,research+verified,1
@@ -122,26 +122,26 @@ Catena Labs,https://catena.com/,ashby,catena,research,1
 Celer Network,https://celer.network,breezy,celer-network-5d8f644bd292,research,1
 Celestia,,lever,celestia,verified,1
 Centrifuge,,lever,centrifuge,research,1
-Cere Network,https://www.cere.network/,lever,cere-network,research,1
+Cere Network,https://www.cere.network/,lever,cere-network,research+404,0
 CertiK,https://www.certik.com,lever,certik,research,1
 Chainalysis,https://www.chainalysis.com/,ashby,chainalysis-careers,research+verified,1
 ChainGPT,https://chaingpt.org,workable,chaingpt,research,1
-Chainlink Labs,https://chainlinklabs.com/,ashby,chainlink-labs,research+verified,1
-Chainstack,https://chainstack.com,bamboohr,chainstack,research,1
+Chainlink Labs,https://chainlinklabs.com/,ashby,chainlink-labs,research+verified+404,0
+Chainstack,https://chainstack.com,bamboohr,chainstack,research+404,0
 Chakra Labs,,ashby,chakra-labs,research,1
 Charm,https://www.charm.fi/,notion,reliable-laborer-cab,research,0
-Chef Robotics,https://www.chefrobotics.ai/,lever,chefrobotics,research,1
+Chef Robotics,https://www.chefrobotics.ai/,lever,chefrobotics,research+404,0
 Cipher,https://ciphermining.com/,greenhouse,cipherminingtechnologiesinc,research,1
 Circle,,ashby,circle,verified,1
 Circle,,workday,circle|wd1|circle,research,1
 CleanSpark,https://www.cleanspark.com/,lever,cleanspark,research,1
-Clearstream Fund Services,https://www.clearstream.com/clearstream-en/funds-services,bamboohr,fundsdlt,research,1
+Clearstream Fund Services,https://www.clearstream.com/clearstream-en/funds-services,bamboohr,fundsdlt,research+404,0
 CloudTech Group,https://cloudtechgroup.com/,workable,cloudtech-group,research,1
 Clovyr,https://clovyr.io,breezy,clovyr,research,1
-Cobo,https://www.cobo.com,greenhouse,cobo,research,1
+Cobo,https://www.cobo.com,greenhouse,cobo,research+404,0
 Codex,,ashby,codex,research,1
 Coin Metrics,https://coinmetrics.io,ashby,talos-trading,research,1
-Coin Metrics,https://coinmetrics.io,greenhouse,coinmetrics,research,1
+Coin Metrics,https://coinmetrics.io,greenhouse,coinmetrics,research+404,0
 Coinbase,,greenhouse,coinbase,research+verified,1
 CoinDesk,https://www.coindesk.com,workday,bullish|wd3|coindesk,research+verified,1
 Coinflow,https://coinflow.cash,ashby,coinflow,research,1
@@ -149,11 +149,11 @@ CoinGecko,https://coingecko.com,lever,coingecko,research+verified,1
 Coinhako,https://www.coinhako.com/,ashby,sbi-coinhako,research,1
 Coinhako,,ashby,coinhako,verified,1
 CoinJar,https://www.coinjar.com/global/,workable,coinjar,research,1
-CoinMarketCap,https://coinmarketcap.com,bamboohr,coinmarketcap,research,1
+CoinMarketCap,https://coinmarketcap.com,bamboohr,coinmarketcap,research+404,0
 CoinMarketCap,https://coinmarketcap.com,lever,coinmarketcap,research+verified,1
 Coinme,https://coinme.com,greenhouse,coinme,research,1
 Coins.ph,https://www.coins.ph,lever,coins,research+verified,1
-CoinsPaid,https://coinspaid.com,lever,coinspaid,research,1
+CoinsPaid,https://coinspaid.com,lever,coinspaid,research+404,0
 CoinStats,https://coinstats.app,smartrecruiters,coinstats,research,1
 "Commonware, Inc.",https://commonware.xyz/,ashby,commonware,research,1
 Compass Mining,https://compassmining.io,rippling,compass-mining,research,1
@@ -187,7 +187,7 @@ DerivaDEX,,breezy,dex-labs,research,1
 Dinari,,wellfound,dinari,research,0
 Divine,,ashby,divineresearch,research,1
 Djamo,,breezy,djamo,research,1
-DMG Blockchain Solutions Inc.,https://www.dmgblockchain.com/,bamboohr,dmgblockchain,research,1
+DMG Blockchain Solutions Inc.,https://www.dmgblockchain.com/,bamboohr,dmgblockchain,research+404,0
 DODO,https://dodoex.io,notion,dodotopia,research,0
 DolarApp,,ashby,arq,research,1
 Doppler,https://www.doppler.lol,ashby,whetstoneresearch,research,1
@@ -213,16 +213,16 @@ Elliptic,https://www.elliptic.co,ashby,elliptic,research+verified,1
 "Eluvio, Inc.",https://eluv.io,workable,eluvio,research,1
 Elwood Technologies,,greenhouse,elwoodtechnologies,research,1
 Encode Club Education Limited,https://www.encodeclub.com/,notion,encodeclub,research,0
-Energy Web,https://energyweb.org/,greenhouse,energywebfoundation,research,1
+Energy Web,https://energyweb.org/,greenhouse,energywebfoundation,research+404,0
 Envio,https://envio.dev,notion,envio-dev,research,0
 Ergonia,https://www.ergonia.io/,workable,ergonia,research,1
-Espresso Systems,https://www.espressosys.com/,lever,espresso,research+verified,1
+Espresso Systems,https://www.espressosys.com/,lever,espresso,research+verified+404,0
 Ethena,,lever,ethena,verified,1
 Ethena Labs,https://ethena.fi,lever,ethenalabs,research,1
 ether.fi,https://www.ether.fi,ashby,ether.fi,research,1
 eToro,https://www.etoro.com,comeet,etoro|41.009,research,0
 Everclear Foundation,https://everclear.org/,lever,connext-network,research,1
-Everstake,,bamboohr,everstake,research,1
+Everstake,,bamboohr,everstake,research+404,0
 Exo Labs,,ashby,exo,research,1
 Ezeebit,https://ezeebit.com,notion,ezeebit,research,0
 FalconX,https://www.falconx.io,greenhouse,falconx,research+verified,1
@@ -241,7 +241,7 @@ Flowdesk,https://www.flowdesk.co/,greenhouse,flowdesk,research+verified,1
 Fluree PBC,https://flur.ee,breezy,fluree,research,1
 Fomo,https://fomo.family/,ashby,fomo-labs,research,1
 Fortitude Mining,,greenhouse,fortitudeminingllc,research,1
-FortyTwo,https://www.fortytwo.money/,ashby,fortytwo,research,1
+FortyTwo,https://www.fortytwo.money/,ashby,fortytwo,research+404,0
 FortyTwo,https://www.fortytwo.money/,workable,fortytwo,research,1
 Founders Factory,https://foundersfactory.com/,ashby,founders-factory,research,1
 Fountain,https://fountainplatform.com/,notion,joinfountain,research,0
@@ -249,7 +249,7 @@ Fractal,,gem,augustdigital,research,1
 Fractal,,wellfound,fractal-protocol-1,research,0
 FT Partners,https://ftpartners.com/,greenhouse,financialtechnologypartners,research,1
 Fuel Labs,https://fuel.network,lever,fuellabs,research,1
-Fusang,https://fusang.co/,bamboohr,fusang,research,1
+Fusang,https://fusang.co/,bamboohr,fusang,research+404,0
 Fuse Energy,,workable,fuseenergy,research,1
 Fuzzland,https://fuzz.land/,notion,fuzzland,research,0
 G-20 Group,https://g20.group/,workable,g-20-advisors-ag,research,1
@@ -265,7 +265,7 @@ Genies,https://genies.com/,ashby,genies,research,1
 Genius,https://tradegenius.com/,ashby,shuttlelabs,research,1
 Gensyn,https://www.gensyn.ai/,greenhouse,gensyn,research,1
 getquin,https://www.getquin.com/,personio,getquin,research,1
-GigaStar,https://gigastar.io,bamboohr,gigastar,research,1
+GigaStar,https://gigastar.io,bamboohr,gigastar,research+404,0
 Gitcoin,https://gitcoin.co,wellfound,gitcoin,research,0
 Gnosis,https://www.gnosis.io,personio,gnosis,research,1
 Gondor,https://gondor.fi,dover,8fb47d0b-88e5-45a4-8072-ff316184b540,research,0
@@ -280,7 +280,7 @@ Hedera Hashgraph,,ashby,hashgraph,research,1
 Helius,https://www.helius.dev,ashby,helius,research+verified,1
 Hex Trust,https://hextrust.com,workable,hextrust,research,1
 Hiro,,greenhouse,hiro,research,1
-Hivemapper,https://hivemapper.com,lever,hivemapper,research,1
+Hivemapper,https://hivemapper.com,lever,hivemapper,research+404,0
 Hivemind Capital Partners,https://hivemind.capital/,lever,hivemind-capital,research,1
 Hologram,https://www.hologram.xyz/,notion,hologramlabs,research,0
 Horizen Labs,https://www.horizenlabs.io/,greenhouse,horizenlabs,research,1
@@ -296,20 +296,20 @@ Immunefi,,greenhouse,immunefi,research,1
 Immutable,https://www.immutable.com,lever,immutable,research+verified,1
 Impossible Finance,https://impossible.finance,notion,impossiblefinance,research,0
 Improbable,,ashby,improbable,research,1
-Inco,https://www.inco.org,bamboohr,inco,research,1
+Inco,https://www.inco.org,bamboohr,inco,research+404,0
 "Incode Technologies, Inc.",https://www.incode.com/,greenhouse,incode,research,1
 Infinite Field,https://www.infinitefield.xyz/,ashby,infinitefield,research,1
 Informal Systems,https://informal.systems/,greenhouse,informal,research,1
 Injective Foundation,https://injective.com/,ashby,injective-labs,research,1
 Injective Foundation,https://injective.com/,ashby,injective,research,1
-IoTeX,https://iotex.io,lever,machinefilab,research,1
+IoTeX,https://iotex.io,lever,machinefilab,research+404,0
 Jito Labs,https://www.jito.network,ashby,jito-labs,research+verified,1
 Jito Labs,https://www.jito.network,lever,jito.wtf,research,1
 Jito Labs,https://www.jito.network,lever,jito,research,1
 Jump Crypto,https://firedancer.io,greenhouse,jumpcrypto,research+verified,1
 Jump Trading,,greenhouse,jumptrading,research+verified,1
 Jungle,,notion,itsjungle,research,0
-Kaiko,https://www.kaiko.com,lever,kaiko,research,1
+Kaiko,https://www.kaiko.com,lever,kaiko,research+404,0
 Kalshi,,ashby,kalshi,verified,1
 Kalshi,,greenhouse,kalshi,research+verified,1
 Kamino,,ashby,kamino,verified,1
@@ -328,7 +328,7 @@ LayerZero,https://layerzero.network,greenhouse,layerzerolabs,research+verified,1
 LD Technologies Foundation,https://www.swellnetwork.io/,notion,sun-animal-482,research,0
 Learn.xyz,,notion,learn-at-work,research,0
 Ledger,https://www.ledger.com,ashby,ledger,research+verified,1
-Ledger,https://www.ledger.com,lever,ledger,research,1
+Ledger,https://www.ledger.com,lever,ledger,research+404,0
 Legion,https://legion.cc,greenhouse,legion,research,1
 LemFi,https://lemfi.com/,ashby,lemfi,research,1
 LI.FI,https://li.fi,ashby,li.fi,research,1
@@ -344,12 +344,12 @@ Magic Eden,https://magiceden.io,ashby,magiceden,research+verified,1
 Malbec Labs,,ashby,doublezero,research,1
 Mantle,,ashby,mantle,verified,1
 Mantle Network,,ashby,windranger,research,1
-"MARA Holdings, Inc.",https://www.mara.com/,greenhouse,mara,research,1
+"MARA Holdings, Inc.",https://www.mara.com/,greenhouse,mara,research+404,0
 Mathrix Group,https://mathrix.recruitee.com/,recruitee,mathrix,research,1
 Matter Labs,,ashby,matter-labs,research+verified,1
-Matters Lab,https://matters-lab.io/,lever,matters,research,1
+Matters Lab,https://matters-lab.io/,lever,matters,research+404,0
 Meow Technologies,https://www.meow.com,ashby,meow,research,1
-Mercuryo,https://mercuryo.io,bamboohr,mercuryo,research,1
+Mercuryo,https://mercuryo.io,bamboohr,mercuryo,research+404,0
 Merge,https://www.merge.money,ashby,mergemoney,research,1
 Merkle Science,https://merklescience.com,lever,merklescience,research,1
 Mesh,,greenhouse,mesh,research,1
@@ -357,7 +357,7 @@ Metaplex,,workable,the-metaplex-foundation,research,1
 MetaWealth,,lever,metawealth,research,1
 MicroVentures,https://microventures.com/,lever,microventures,research,1
 Midas,,wellfound,midas-10,research,0
-Midnight Network,https://midnight.network,bamboohr,midnightfoundation,research,1
+Midnight Network,https://midnight.network,bamboohr,midnightfoundation,research+404,0
 Milk Road,https://milkroad.com/,notion,impactdm,research,0
 "Milo Credit, LLC",https://www.milo.io/,lever,milocredit,research,1
 Molecule,https://molecule.xyz/,ashby,molecule,research,1
@@ -381,7 +381,7 @@ N1,https://www.n1.xyz/,ashby,n1,research,1
 n3xt inc,https://n3xt.io/,rippling,n3xt-jobs,research,1
 Nala,,workable,nalamoney,research,1
 Nansen,https://nansen.ai/,greenhouse,nansen,research,1
-NEBRA,https://nebra.one/,lever,nebra-labs,research,1
+NEBRA,https://nebra.one/,lever,nebra-labs,research+404,0
 Nethermind,https://www.nethermind.io,ashby,nethermind,research,1
 Neutron,https://neutron.me,teamtailor,hadronlabs,research,1
 Newton,https://www.newton.co/,lever,newton,research,1
@@ -391,18 +391,18 @@ Nilos Financial Services Ltd.,https://www.nilos.io/,dover,6811bbdd-5a21-4c86-aed
 NinjaTrader,https://ninjatrader.com/,greenhouse,ninjatrader,research,1
 Nitra,,lever,nitra,research,1
 Nium Pte. Ltd.,https://www.nium.com/,lever,nium,research,1
-Noble,https://www.noble.xyz,greenhouse,noble,research,1
+Noble,https://www.noble.xyz,greenhouse,noble,research+404,0
 NodeOps Network,https://nodeops.network,notion,nodeopsxyz,research,0
 Nomics,,breezy,nomics,research,1
-Nomina,https://www.nomina.io,greenhouse,omnifdn,research,1
+Nomina,https://www.nomina.io,greenhouse,omnifdn,research+404,0
 Noox,,notion,noox,research,0
 Notabene,,ashby,notabene,research,1
-Notebook Labs,https://www.notebooklabs.xyz/,greenhouse,notebooklabs,research,1
-Nova Labs,https://nova.xyz/,greenhouse,novalabs,research,1
+Notebook Labs,https://www.notebooklabs.xyz/,greenhouse,notebooklabs,research+404,0
+Nova Labs,https://nova.xyz/,greenhouse,novalabs,research+404,0
 Novig,,ashby,novig,research,1
 Numerai,https://numer.ai/,wellfound,numerai,research,0
 Numeus Group,https://classic.numeus.xyz/,greenhouse,numus,research,1
-Oasis Network,https://oasisprotocol.org,greenhouse,oasisnetwork,research,1
+Oasis Network,https://oasisprotocol.org,greenhouse,oasisnetwork,research+404,0
 Offchain Labs,,lever,offchainlabs,research+verified,1
 OKX,https://www.okx.com/,greenhouse,okx,research+verified,1
 Omni Network,,greenhouse,nomina,research,1
@@ -436,7 +436,7 @@ Perena,,dover,84c7f002-9656-4f2f-9a8c-36f350451656,research,0
 Perena,,dover,7cf76c0a-93a4-4ca6-b977-478e8b999f13,research,0
 Perle,,rippling,perle,research,1
 Phantom,https://phantom.com,ashby,phantom,research,1
-Phantom,https://phantom.com,greenhouse,phantom45,research+verified,1
+Phantom,https://phantom.com,greenhouse,phantom45,research+verified+404,0
 Pixion Games,https://pixiongames.com/,teamtailor,pixiongames,research,1
 Plasma,,ashby,plasma,research,1
 Plume Network,,rippling,plume-network,research,1
@@ -444,7 +444,7 @@ Pluralis Research,https://pluralis.ai/,ashby,pluralis-research,research,1
 Pod Network,https://www.pod.network/,ashby,pod-network,research,1
 Polygon Labs,https://polygon.technology,ashby,polygon-labs,research+verified,1
 Polymarket,https://polymarket.com,ashby,polymarket,research+verified,1
-Polymer Labs,https://polymerlabs.org,lever,polymerlabs,research,1
+Polymer Labs,https://polymerlabs.org,lever,polymerlabs,research+404,0
 Polynomial,,notion,polynomialfi,research,0
 Presto Labs,,lever,prestolabs,verified,1
 Prime Intellect,https://www.primeintellect.ai,ashby,primeintellect,research,1
@@ -464,7 +464,7 @@ Radarblock,https://radarblock.xyz/,notion,radarblock,research,0
 Raiku,,ashby,raiku,research,1
 Re7 Capital,https://re7.capital,workable,re7-capital,research,1
 Recall Foundation,https://recall.network/,greenhouse,recall,research,1
-Recall Foundation,https://recall.network/,greenhouse,textileio,research,1
+Recall Foundation,https://recall.network/,greenhouse,textileio,research+404,0
 RedotPay,https://www.redotpay.com,notion,clover-lentil-da6,research,0
 Relai AG,https://relai.app/,greenhouse,technology,research,1
 Relay,https://relay.link/,ashby,reservoir,research+verified,1
@@ -473,7 +473,7 @@ Resolv,https://resolv.xyz,notion,resolv-labs,research,0
 Reveel,https://reveel.id,notion,r3vl,research,0
 Rhinestone,https://www.rhinestone.dev,notion,rhinestone,research,0
 Ripple,,greenhouse,ripple,research+verified,1
-Ripple Prime,https://hiddenroad.com/,greenhouse,hiddenroad,research,1
+Ripple Prime,https://hiddenroad.com/,greenhouse,hiddenroad,research+404,0
 Rise,,dover,d595b798-2ea3-4460-8a29-7166d730084b,research,0
 Rise,,dover,4f8b4aa9-6836-4517-a5d0-cc86efd359e9,research,0
 Rise,,dover,e32910e9-8e0e-46e7-b092-cc33a108fd54,research,0
@@ -497,33 +497,33 @@ seal,https://www.sealapp.xyz/,ashby,stand,research,1
 Second Tier,https://tier.xyz,notion,eager-kingfisher-27a,research,0
 Securitize,https://securitize.io,greenhouse,securitize,research+verified,1
 Sei Labs,https://www.sei.io,ashby,sei-labs,research,1
-Sei Labs,https://www.sei.io,lever,seilabs,research,1
+Sei Labs,https://www.sei.io,lever,seilabs,research+404,0
 Selini Capital,https://www.selinicapital.com,greenhouse,selinicapital,research,1
 Sentient,https://sentient.foundation/,ashby,sentient,research,1
 Sequence,,ashby,sequence,research,1
 Serotonin,https://serotonin.co,lever,serotonin,research,1
 Shakepay,https://shakepay.com/,greenhouse,shakepay,research,1
 ShapeShift,,notion,shapeshift,research,0
-Shardeum Foundation,https://shardeum.org/,greenhouse,shardeumfoundation,research,1
+Shardeum Foundation,https://shardeum.org/,greenhouse,shardeumfoundation,research+404,0
 Siphon Money,https://siphon.money,notion,upbeat-bar-91c,research,0
 Sky Mavis,https://skymavis.com/,ashby,skymavis,research,1
 "Slash Financial, Inc.",https://www.slash.com,ashby,slash-financial,research,1
 Sleek,https://sosleek.io/,notion,far-perigee-8d8,research,0
 Slope Finance,https://slope.finance/,notion,slopegroup,research,0
-Snickerdoodle,https://www.snickerdoodle.com/,greenhouse,snickerdoodlelabs,research,1
+Snickerdoodle,https://www.snickerdoodle.com/,greenhouse,snickerdoodlelabs,research+404,0
 Socket,,greenhouse,socket,research,1
 Solana Foundation,https://solana.org/,ashby,solana%20foundation,research,1
 Somnia Network,https://somnia.network,ashby,somnia,research,1
 Soter Insure,https://www.soter.insure/,ashby,soterinsure,research,1
 Sound,,ashby,sound.xyz,research,1
-Sovrun,https://www.sovrun.org/,workable,breederdao,research,1
-Spacing Guild GmbH,https://arrakis.finance/,ashby,arrakis,research,1
+Sovrun,https://www.sovrun.org/,workable,breederdao,research+404,0
+Spacing Guild GmbH,https://arrakis.finance/,ashby,arrakis,research+404,0
 Spektr,https://www.spektr.com/,greenhouse,spektr,research,1
 Sphere,https://spherepay.co,lever,sphere-laboratories,research,1
 Spiko,https://www.spiko.io,teamtailor,spiko,research,1
 Spindl,,greenhouse,basejobs,research,1
 Spruce Systems,,ashby,spruceid,research,1
-SpruceID,https://spruceid.com/,lever,sprucesystems,research,1
+SpruceID,https://spruceid.com/,lever,sprucesystems,research+404,0
 Squad,https://www.gosquad.ai/,ashby,squadai,research,1
 Squads,https://squads.xyz,ashby,squads,research,1
 stabble,https://stabble.org/,notion,stabble,research,0
@@ -532,7 +532,7 @@ Stargate,https://stargate.finance,ashby,stargate-foundation,research+verified,1
 Starknet,https://www.starknet.io,ashby,starknetfoundation,research,1
 Steakhouse Financial,,ashby,steakhouse,research,1
 Stellar Development Foundation,https://stellar.org,ashby,stellar,research,1
-Stellar Development Foundation,https://stellar.org,greenhouse,stellar,research,1
+Stellar Development Foundation,https://stellar.org,greenhouse,stellar,research+404,0
 Stork,https://www.stork.network,ashby,stork,research,1
 StraitsX,https://www.straitsx.com/,greenhouse,straitsx,research,1
 Streamflow,https://streamflow.finance/,notion,streamflow,research,0
@@ -549,7 +549,7 @@ Symbiosis Finance,,notion,symbiosisfinance,research,0
 Symbiotic,https://symbiotic.fi/,ashby,symbiotic,research,1
 Syndica,https://syndica.io,ashby,syndica,research,1
 SZNS,,workable,szns,research,1
-t1 Labs,https://www.t1protocol.com/,lever,t1,research,1
+t1 Labs,https://www.t1protocol.com/,lever,t1,research+404,0
 Tactic,,greenhouse,taxbit,research,1
 Tané,https://tanelabs.com/,notion,tanelabs,research,0
 Tatum,https://tatum.io,workable,tatum,research,1
@@ -562,17 +562,17 @@ The Arena,,notion,the-arena,research,0
 The Better Money Company,https://bettermoney.com/,ashby,bettermoney,research,1
 "The Fun Group, Inc.",https://fun.xyz/,lever,funxyz,research,1
 The Tie,https://www.thetie.io,workable,thetie,research,1
-Thesis*,https://thesis.co/,greenhouse,thesis,research,1
+Thesis*,https://thesis.co/,greenhouse,thesis,research+404,0
 TMGM,https://www.tmgm.com/en,workable,tmgm,research,1
 Toku,https://www.toku.com,lever,toku,research,1
-Tools for Humanity,https://www.toolsforhumanity.com/,greenhouse,worldcoinorg,research,1
+Tools for Humanity,https://www.toolsforhumanity.com/,greenhouse,worldcoinorg,research+404,0
 Towns Protocol,https://www.towns.com/,notion,townslabs,research,0
 Trail of Bits,https://www.trailofbits.com,workable,trailofbits,research,1
 Tribes,https://www.tribes.xyz/,notion,tribesapp,research,0
 TRM Labs,https://www.trmlabs.com,ashby,trm-labs,research+verified,1
 Trojan Trading,,gem,trojan-trading,research,1
 Trust Wallet,,ashby,trust-wallet,research,1
-Turbofish,https://turbofish.org/,greenhouse,turbofish,research,1
+Turbofish,https://turbofish.org/,greenhouse,turbofish,research+404,0
 Turnkey,https://www.turnkey.com,ashby,turnkey,research+verified,1
 Turnkey,https://www.turnkey.com,greenhouse,turnkeycareers,research,1
 TurnStay,,notion,speckled-fan-41a,research,0
@@ -583,15 +583,15 @@ Union Finance,,notion,unionfinance,research,0
 Uniswap,https://uniswap.org,ashby,uniswap,research+verified,1
 Unlimit,https://www.unlimit.com/,lever,unlimit,research,1
 Unto Labs,,ashby,unto-labs,research,1
-Uphold,https://uphold.com,bamboohr,uphold,research,1
+Uphold,https://uphold.com,bamboohr,uphold,research+404,0
 Upvest GmbH,https://upvest.co/,ashby,upvest,research,1
 UTA Ventures,https://www.unitedtalent.com/,ashby,united-talent-agency,research,1
 Utila,https://utila.io,comeet,utila|d9.00f,research,0
 Utorg,,teamtailor,utorg,research,1
-Valora,,greenhouse,valorainc,research,1
+Valora,,greenhouse,valorainc,research+404,0
 Veda,https://veda.tech/,ashby,veda,research,1
 Veda,https://veda.tech/,lever,vedatechlabs,research,1
-VeeFriends,https://veefriends.com/,lever,veefriends,research,1
+VeeFriends,https://veefriends.com/,lever,veefriends,research+404,0
 Veem,https://www.veem.com/,jazzhr,veem,research,0
 Velocity,,ashby,velocity,research,1
 Venice,,greenhouse,veniceai,research,1
@@ -610,7 +610,7 @@ Wavebridge,https://wavebridge.com,notion,wavebridge,research,0
 Web3Auth,https://web3auth.io/,dover,b2a8b57c-bdf0-4298-9816-d556f10ce7f2,research,0
 Wert,https://wert.io,notion,wert-io,research,0
 Wintermute,https://wintermute.com,lever,wintermute-trading,research+verified,1
-Wirex,https://wirexapp.com,bamboohr,wirex,research,1
+Wirex,https://wirexapp.com,bamboohr,wirex,research+404,0
 WOO,https://woo.org,greenhouse,woo,research,1
 Workable,,workable,careers,research,1
 Worldcoin,,ashby,tools%20for%20humanity,research,1
@@ -621,9 +621,9 @@ Xapo Bank,,greenhouse,xapo61,research,1
 XMTP,,ashby,xmtp%20labs,research,1
 XREX,https://xrex.io,breezy,xrex,research,1
 XTX Markets,https://www.xtxmarkets.com/,greenhouse,xtxmarketstechnologies,research,1
-Yapstone,https://www.yapstone.com/,bamboohr,yapstone,research,1
-YeagerAI,https://www.yeager.ai/#intro,workable,yeager-dot-a-i,research,1
-Yellow Card,https://yellowcard.io,bamboohr,yellowcard,research,1
+Yapstone,https://www.yapstone.com/,bamboohr,yapstone,research+404,0
+YeagerAI,https://www.yeager.ai/#intro,workable,yeager-dot-a-i,research+404,0
+Yellow Card,https://yellowcard.io,bamboohr,yellowcard,research+404,0
 YieldNest,https://www.yieldnest.finance/,notion,yieldnest,research,0
 Youki GmbH,https://www.youki.ai/,personio,youki-gmbh,research,1
 Yuma,,greenhouse,yuma,research,1
