@@ -42,6 +42,24 @@ Every source is fully re-pulled each run. Jobs not seen for 10 days are "stale" 
 ## Running
 python -m jobradar seed | poll [--source NAME] [--force] | serve [--port N]
 
+- **First time:** `seed`, then `poll --force`, then `serve`. The first full poll took 19 minutes on 2026-10-21: ATS 9 min, getro 8 min, everything else under 2 min. ATS results land in one commit at the end of the ATS pass, so the UI stays empty for the first ~9 minutes.
+- **Scheduling:** launchd/com.davidc.jobradar.poll.plist runs `poll` every 15 minutes, and each source decides whether it is due. launchd/com.davidc.jobradar.web.plist keeps the UI running.
+
+  Install:
+  `cp launchd/*.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.davidc.jobradar.poll.plist` (same for `.web`).
+
+  Stop:
+  `launchctl bootout gui/$(id -u)/com.davidc.jobradar.poll`.
+- **Rebuild from scratch:** `rm data/jobradar.db && python -m jobradar seed && python -m jobradar poll --force`.
+- **Logs:** data/poll.log and data/web.log (launchd); data/first-poll.log (manual first run).
+
+## Operating notes (first poll, 2026-10-21)
+- 23,686 sightings → 10,263 jobs (43% merged). 684 sightings attached as *probable*.
+- The same job often appears on many getro networks (one Ripple role had 23 sightings), so getro adds many sightings but few new jobs.
+- 69 seed boards returned 404 and are disabled in seeds/boards.csv with origin suffix `+404`. Check the Failing boards table on /sources after each full poll.
+- eleduck can legitimately return 0: it is a general remote-work feed filtered to web3 keywords.
+- UI opens on "posted in last 7 days"; pick "any time" to see everything.
+
 ## Adding a source
 1. Write `collect(http) -> list[Posting]`.
 2. Register it in collectors/__init__.py and config.INTERVALS.
