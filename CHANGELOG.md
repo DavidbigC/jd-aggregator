@@ -8,3 +8,4 @@
 - 2026-10-21 feat: collect JobStash and 25 VC portfolio job boards
 - 2026-10-21 feat: collect web3.career and five RSS job feeds
 - 2026-10-21 feat: add Chinese/APAC sources (Rebase, DeJob, MyCareersFuture)
+- 2026-10-21 feat: add poll runner with per-source intervals and a CLI
