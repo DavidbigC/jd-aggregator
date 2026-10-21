@@ -26,6 +26,9 @@ INTERVALS = {
     "mycareersfuture": 360,
 }
 
+SUPPORTED_ATS = {"greenhouse", "lever", "lever-eu", "ashby", "workable", "recruitee", "smartrecruiters", "bamboohr",
+                 "breezy", "teamtailor", "personio", "rippling", "gem", "workday"}
+
 COMPANY_ALIASES = {
     "payward": "kraken",
     "tools for humanity": "world",
