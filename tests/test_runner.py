@@ -35,3 +35,12 @@ def test_ats_run_records_per_board_status(conn, monkeypatch):
     assert r["status"] == "ok" and r["new_jobs"] == 1
     st = dict(conn.execute("SELECT slug, last_status FROM boards").fetchall())
     assert st["ok"] == "ok" and st["bad"].startswith("error")
+
+
+def test_poll_prefetches_aggregators_and_ingests_each(conn, monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(runner, "AGGREGATORS", {
+        "a": lambda http: [Posting(source="a", source_job_id="1", company="Acme", title="Eng")],
+        "b": lambda http: 1 / 0})
+    results = dict(runner.poll(conn, sources=["a", "b"], force=True, http=object(), log=lambda m: None))
+    assert results["a"]["new_jobs"] == 1 and results["b"]["status"] == "error"

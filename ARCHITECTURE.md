@@ -42,7 +42,7 @@ Every source is fully re-pulled each run. Jobs not seen for 10 days are "stale" 
 ## Running
 python -m jobradar seed | poll [--source NAME] [--force] | serve [--port N]
 
-- **First time:** `seed`, then `poll --force`, then `serve`. The first full poll took 19 minutes on 2026-10-21: ATS 9 min, getro 8 min, everything else under 2 min. ATS results land in one commit at the end of the ATS pass, so the UI stays empty for the first ~9 minutes.
+- **First time:** `seed`, then `poll --force`, then `serve`. A full poll takes about 8 minutes. Aggregators are fetched in background threads while the ATS pass runs with 8 workers; the 1 req/s per-host limit still holds, so getro (22 networks on one API host, ~7.5 min) sets the floor. The ATS pass took 4 min for ~9.8k jobs on 2026-10-21. Each ATS board is committed as it lands, so the UI fills in during the run. All SQLite writes stay on the main thread.
 - **Scheduling:** launchd/com.davidc.jobradar.poll.plist runs `poll` every 15 minutes, and each source decides whether it is due. launchd/com.davidc.jobradar.web.plist keeps the UI running.
 
   Install:
