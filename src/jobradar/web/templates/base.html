@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Job Radar{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/">Job Radar</a>
+  <nav>
+    <a href="/" class="{{ 'on' if nav == 'jobs' }}">Jobs</a>
+    <a href="/companies" class="{{ 'on' if nav == 'companies' }}">Companies</a>
+    <a href="/sources" class="{{ 'on' if nav == 'sources' }}">Sources</a>
+  </nav>
+  <div class="stats">
+    <span><b>{{ stats.active }}</b> active</span>
+    <span><b>{{ stats.new_24h }}</b> new 24h</span>
+    <span><b>{{ stats.companies }}</b> companies</span>
+    {% if stats.source_errors %}<a class="bad" href="/sources">{{ stats.source_errors }} source errors</a>{% endif %}
+    <span>polled {{ stats.last_poll | ago }}</span>
+  </div>
+</header>
+<main>{% block main %}{% endblock %}</main>
+</body>
+</html>

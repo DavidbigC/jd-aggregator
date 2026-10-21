@@ -1,0 +1,17 @@
+{% for j in jobs %}
+<li class="job" hx-get="/jobs/{{ j.id }}" hx-target="#detail"
+    hx-on:click="document.querySelectorAll('.job.sel').forEach(e => e.classList.remove('sel')); this.classList.add('sel')">
+  <div class="job-main">
+    <div class="job-title">{% if j.is_new %}<span class="dot" aria-label="new"></span>{% endif %}{{ j.title }}</div>
+    <div class="job-sub">{{ j.company }}{% if j.locations %} · {{ j.locations | join(' / ') | truncate(80) }}{% endif %}{% if j.remote %} · <span class="tag">Remote</span>{% endif %}</div>
+  </div>
+  <div class="job-meta">
+    {% if j.salary %}<div class="salary">{{ j.salary }}</div>{% endif %}
+    <div>{{ (j.posted_at or j.first_seen_at) | ago }}</div>
+    <div class="srcs">{% for k in j.kinds %}<span class="src src-{{ k }}">{{ k }}</span>{% endfor %}{% if j.n_sources > 1 %}<span class="n">×{{ j.n_sources }}</span>{% endif %}</div>
+  </div>
+</li>
+{% endfor %}
+{% if more %}
+<li class="more"><button class="ghost" hx-get="{{ next_url }}" hx-target="closest li" hx-swap="outerHTML">Load more</button></li>
+{% endif %}

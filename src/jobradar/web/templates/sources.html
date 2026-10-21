@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Sources · Job Radar{% endblock %}
+{% block main %}
+<div class="page-head"><h1>Sources</h1><span class="muted">Polled automatically. “Run now” forces one source.</span></div>
+<div class="panel"><table>
+  <tr><th>Source</th><th class="num">Every</th><th>Last run</th><th>Status</th><th class="num">Fetched</th><th class="num">New</th><th class="num">Jobs</th><th></th></tr>
+  {% for s in rows %}
+  <tr>
+    <td>{{ s.name }}</td>
+    <td class="num">{{ s.interval }}m</td>
+    <td>{{ s.finished_at | ago }}</td>
+    <td class="status-{{ s.status }}">{{ s.status }}{% if s.error %}<div class="err">{{ s.error }}</div>{% endif %}</td>
+    <td class="num">{{ s.fetched or 0 }}</td>
+    <td class="num">{{ s.new_jobs or 0 }}</td>
+    <td class="num">{{ s.jobs }}</td>
+    <td><button class="ghost" hx-post="/sources/{{ s.name }}/run" hx-swap="outerHTML">Run now</button></td>
+  </tr>
+  {% endfor %}
+</table></div>
+<h2 class="sub-head">Company hiring boards</h2>
+<div class="panel"><table>
+  <tr><th>ATS</th><th class="num">Boards</th><th class="num">Enabled</th><th class="num">Erroring</th><th class="num">Jobs last poll</th></tr>
+  {% for a in by_ats %}
+  <tr><td>{{ a.ats }}</td><td class="num">{{ a.boards }}</td><td class="num">{{ a.enabled }}</td><td class="num">{{ a.errors or 0 }}</td><td class="num">{{ a.jobs }}</td></tr>
+  {% endfor %}
+</table></div>
+{% if failing %}
+<h2 class="sub-head">Failing boards</h2>
+<div class="panel"><table>
+  <tr><th>Company</th><th>ATS</th><th>Slug</th><th>Error</th></tr>
+  {% for b in failing %}<tr><td>{{ b.name }}</td><td>{{ b.ats }}</td><td>{{ b.slug }}</td><td class="err">{{ b.last_status }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

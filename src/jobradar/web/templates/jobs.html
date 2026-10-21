@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="jobs-layout">
+  <form id="filters" class="filters" hx-get="/" hx-target="#results" hx-push-url="true"
+        hx-trigger="change, input changed delay:300ms from:#q, submit">
+    <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Search title, company, description" autofocus>
+    <fieldset><legend>Posted</legend>
+      {% for k, label in [('24h', '24h'), ('3d', '3 days'), ('7d', '7 days'), ('30d', '30 days'), ('all', 'Any time')] %}
+      <label class="pill"><input type="radio" name="posted" value="{{ k }}" {{ 'checked' if f.posted == k }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <fieldset><legend>Region</legend>
+      {% for k in ['', 'APAC', 'EMEA', 'Americas'] %}
+      <label class="pill"><input type="radio" name="region" value="{{ k }}" {{ 'checked' if f.region == k }}><span>{{ k or 'Any' }}</span></label>
+      {% endfor %}
+      <label class="check"><input type="checkbox" name="remote" value="1" {{ 'checked' if f.remote }}> Remote only</label>
+    </fieldset>
+    <fieldset><legend>Source</legend>
+      <select name="source">
+        <option value="">All sources</option>
+        {% for k, label in source_groups %}<option value="{{ k }}" {{ 'selected' if f.source == k }}>{{ label }}</option>{% endfor %}
+      </select>
+    </fieldset>
+    <fieldset><legend>Sort</legend>
+      <select name="sort">
+        <option value="posted" {{ 'selected' if f.sort == 'posted' }}>Newest posted</option>
+        <option value="new" {{ 'selected' if f.sort == 'new' }}>Newest found</option>
+        <option value="company" {{ 'selected' if f.sort == 'company' }}>Company A–Z</option>
+      </select>
+      <label class="check"><input type="checkbox" name="stale" value="1" {{ 'checked' if f.stale }}> Include stale</label>
+    </fieldset>
+    {% if f.company %}
+    <input type="hidden" name="company" value="{{ f.company }}">
+    <p class="muted">Filtered to one company · <a href="/">clear</a></p>
+    {% endif %}
+  </form>
+  <section id="results" class="results">{% include "_results.html" %}</section>
+  <aside id="detail" class="detail"><p class="muted empty">Select a job to see details.</p></aside>
+</div>
+{% endblock %}

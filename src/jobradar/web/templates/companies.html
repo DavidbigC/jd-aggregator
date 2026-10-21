@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Companies · Job Radar{% endblock %}
+{% block main %}
+<div class="page-head">
+  <h1>Companies</h1>
+  <form class="search" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Filter companies"></form>
+</div>
+<div class="panel"><table>
+  <tr><th>Company</th><th class="num">Active jobs</th><th>Hiring boards polled</th><th>Website</th></tr>
+  {% for c in rows %}
+  <tr>
+    <td><a href="/?company={{ c.id }}&posted=all">{{ c.name }}</a></td>
+    <td class="num">{{ c.active }}</td>
+    <td class="muted">{{ c.boards or '—' }}</td>
+    <td>{% if c.website %}<a href="{{ c.website }}" target="_blank" rel="noopener">{{ c.website | replace('https://', '') | replace('http://', '') }}</a>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endblock %}
