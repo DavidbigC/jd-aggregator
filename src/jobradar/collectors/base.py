@@ -11,7 +11,7 @@ def gather(items, fn) -> list:
 
 
 def _k(v) -> str:
-    return f"{v / 1000:g}k" if v >= 1000 else f"{v:g}"
+    return f"{v / 1000:.0f}k" if v >= 1000 else f"{v:g}"
 
 
 def salary_text(lo, hi, currency=None, period=None) -> str | None:
