@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<workzag-jobs>
+
+<position>
+    <id>2729487</id>
+    <subcompany>Finoa LT, UAB</subcompany>
+    <office>Vilnius</office>
+    <additionalOffices>
+        <office>(Hybrid) Lithuania</office>
+    </additionalOffices>
+    <department>Security Engineering</department>
+    <name>(Senior) IT Security Engineer</name>
+    <jobDescriptions></jobDescriptions>
+    <employmentType>permanent</employmentType>
+    <seniority>experienced</seniority>
+    <schedule>full-time</schedule>
+    <yearsOfExperience>2-5</yearsOfExperience>
+    <keywords>SOC, security operations, security engineering</keywords>
+    <occupation>computer_and_network_security</occupation>
+    <occupationCategory>it_software</occupationCategory>
+    <createdAt>2026-07-27T11:00:58+00:00</createdAt>
+</position>
+
+<position>
+    <id>2615131</id>
+    <subcompany>Finoa GmbH</subcompany>
+    <office>Berlin</office>
+    <department>Sales</department>
+    <name>Business Development Intern (m/f/d)</name>
+    <jobDescriptions></jobDescriptions>
+    <employmentType>intern</employmentType>
+    <seniority>entry-level</seniority>
+    <schedule>full-time</schedule>
+    <keywords>sales</keywords>
+    <occupation>field_sales</occupation>
+    <occupationCategory>sales_and_business_development</occupationCategory>
+    <createdAt>2026-04-27T13:10:15+00:00</createdAt>
+</position>
+
+<position>
+    <id>2615143</id>
+    <subcompany>Finoa GmbH</subcompany>
+    <office>Berlin</office>
+    <department>Marketing</department>
+    <name>Marketing Intern (m/f/d)</name>
+    <jobDescriptions></jobDescriptions>
+    <employmentType>intern</employmentType>
+    <seniority>entry-level</seniority>
+    <schedule>full-time</schedule>
+    <keywords>marketing</keywords>
+    <occupation>events_and_promotional_marketing</occupation>
+    <occupationCategory>marketing_and_product</occupationCategory>
+    <createdAt>2026-04-27T13:17:09+00:00</createdAt>
+</position>
+
+<position>
+    <id>2661184</id>
+    <subcompany>Finoa GmbH</subcompany>
+    <office>Berlin</office>
+    <department>Finance</department>
+    <recruitingCategory>Finance &amp; Accounting</recruitingCategory>
+    <name>Staking Operations Intern (m/f/d)</name>
+    <jobDescriptions></jobDescriptions>
+    <employmentType>intern</employmentType>
+    <seniority>student</seniority>
+    <schedule>full-or-part-time</schedule>
+    <occupation>financial_analysis</occupation>
+    <occupationCategory>accounting_and_finance</occupationCategory>
+    <createdAt>2026-06-08T13:49:11+00:00</createdAt>
+</position>
+
+<position>
+    <id>2712245</id>
+    <office>Vilnius</office>
+    <additionalOffices>
+        <office>(Hybrid) Lithuania</office>
+    </additionalOffices>
+    <department>Security Engineering</department>
+    <recruitingCategory>Tech</recruitingCategory>
+    <name>VP Information Security (m/f/d)</name>
+    <jobDescriptions></jobDescriptions>
+    <employmentType>permanent</employmentType>
+    <seniority>executive</seniority>
+    <schedule>full-time</schedule>
+    <occupation>general_and_other_engineering</occupation>
+    <occupationCategory>engineering</occupationCategory>
+    <createdAt>2026-07-14T16:51:28+00:00</createdAt>
+</position>
+
+</workzag-jobs>

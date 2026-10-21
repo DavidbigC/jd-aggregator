@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title><![CDATA[电鸭社区]]></title>
+        <description><![CDATA[电鸭社区]]></description>
+        <link>https://eleduck.com</link>
+        <generator>RSS for Node</generator>
+        <lastBuildDate>Wed, 21 Oct 2026 12:00:06 GMT</lastBuildDate>
+        <atom:link href="https://eleduck.com/feed/latest.xml" rel="self" type="application/rss+xml"/>
+        <pubDate>Wed, 21 Oct 2026 12:00:05 GMT</pubDate>
+        <copyright><![CDATA[All rights reserved 2026]]></copyright>
+        <language><![CDATA[zh-CN]]></language>
+        <item>
+            <title><![CDATA[【外包零活·远程】Python 脚本开发：公开网页结构化数据导出]]></title>
+            <description><![CDATA[项目简述 需要把若干公开目录页上的机构信息整理成可复跑的 Python 导出脚本，输出为 CSV / SQLite。目标页面均可直接访问，无登录态、无鉴权交互，属于一次性整理工具，不是长期监控任务。 期望技术栈 Python 3，httpx + BeautifulSoup（或你顺手的解析组合） 分页遍历、增量标记、异常重试、基础日志 字段清单与页面样例在确认合作后提供 ]]></description>
+            <link>https://eleduck.com/posts/njfDB4</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/njfDB4</guid>
+            <pubDate>Wed, 21 Oct 2026 10:16:41 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[召集令:在车企（理想，小米，吉利）做过ai相关研发的研发人员]]></title>
+            <description><![CDATA[在车企（理想，小米，吉利）做过ai相关研发的研发人员看过来 ]]></description>
+            <link>https://eleduck.com/posts/XNfOxa</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/XNfOxa</guid>
+            <pubDate>Wed, 21 Oct 2026 06:18:59 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[网红助理|全程远程|在校大学生或高中生优先]]></title>
+            <description><![CDATA[**工作方式：   线上远程协作，全程远程，最好全职，不用坐班，可以兼职，但需要及时在线响应、按时交付。   **时间要求：每天至少5小时，每周至少工作5天（30小时每周），时间相对稳定，可协商排班。   **薪资：2k-2k5，按实际排班时间/任务结算，具体可沟通。 **工作内容：  帮博主P图：人像精修、封面图、日常配图、简单海报；  用AI工具剪辑短视频（提供流程和工具，会教，不难）；  加]]></description>
+            <link>https://eleduck.com/posts/98f9vD</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/98f9vD</guid>
+            <pubDate>Wed, 21 Oct 2026 02:56:31 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[【已结束】付费求简单的工作流。]]></title>
+            <description><![CDATA[写个简单的工作流，付费：我用nocobd做了表格，n8n工作流表单入口，飞书传达，现在附件写不进去，求这条工作流。只需要把图片写进去就可以！ ]]></description>
+            <link>https://eleduck.com/posts/3EfR3D</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/3EfR3D</guid>
+            <pubDate>Tue, 20 Oct 2026 17:11:03 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[我用 AI 辅助开发了一套多租户 AI 客服 SaaS，聊聊架构和踩过的坑]]></title>
+            <description><![CDATA[[图片]      上半年想做个小生意：给中小商家卖 AI 客服。我不会前端也不懂设计， 全靠 AI 辅助写代码，最后真的把系统跑起来、上线运营了。 == 产品长什么样 == 商家注册 → 填自己的大模型 API Key → 在后台配置知识库问答 → 把一行 JS 挂件代码贴到自己网站上 → 访客来咨询，AI 自动接待。 主要设计： * 多租户：每个商家数据隔离，支持泛域名子账号 * 模型层做适配]]></description>
+            <link>https://eleduck.com/posts/ZXfBOm</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/ZXfBOm</guid>
+            <pubDate>Tue, 20 Oct 2026 13:44:01 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[重庆海外社区运营]]></title>
+            <description><![CDATA[【我们是谁】 我们主要开展面向海外市场的 GEO（生成式引擎优化）相关业务，同时做金融领域的资讯整理与信息分享，内容涉及 AI、A股、美股等方向。 我们正在寻找一位做过社群、愿意和用户交流的运营伙伴，参与国内外社交媒体的内容运营。 【岗位职责】 社群日常维护 负责我们现有 社群的日常运营，包括消息发布、用户答疑、话题互动和群内秩序维护。 及时回应用户问题，收集需求与反馈，整理常见问题。 配合团队组]]></description>
+            <link>https://eleduck.com/posts/QZfLR0</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/QZfLR0</guid>
+            <pubDate>Tue, 20 Oct 2026 08:59:31 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[SmartDeer 招聘｜后端工程师（偏全栈能力，远程兼职）12k-20k / 月]]></title>
+            <description><![CDATA[SmartDeer 是一家面向全球的人力服务平台，覆盖 EOR / Payroll / Mobility / AOR / IC / 财税服务 / 公司设立等业务场景。 我们正在招聘一名后端工程师，参与核心业务系统建设。希望你不仅具备扎实的后端开发能力，也能够理解前端实现逻辑，在小团队环境中独立推进业务模块从需求到上线。 公司官网： https://smartdeer.com (https://sm]]></description>
+            <link>https://eleduck.com/posts/x0fX7g</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/x0fX7g</guid>
+            <pubDate>Tue, 20 Oct 2026 02:34:38 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[离职一般多久能找到工作？]]></title>
+            <description><![CDATA[已经34 了，不知道产品经理的工作是否 还能找得到？ ]]></description>
+            <link>https://eleduck.com/posts/JpfVxa</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/JpfVxa</guid>
+            <pubDate>Mon, 19 Oct 2026 22:54:58 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[组队搞AI，找个技术搭子]]></title>
+            <description><![CDATA[方向：AI相关，轻量项目，逻辑清晰，一聊就懂 找：懂程序开发的伙伴，能稳定投入，长期协作 我负责创意和方向，你负责技术落地 合作模式：无前期资金，项目盈利后按约定分成 全程参与，沟通分工，带上案例 ]]></description>
+            <link>https://eleduck.com/posts/DjfyAA</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/DjfyAA</guid>
+            <pubDate>Mon, 19 Oct 2026 16:45:50 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[shopify商户渠道合作]]></title>
+            <description><![CDATA[项目主要是面向shopify跨境电商商家，需要有shopify有相关客户资源的人，合作共赢，具体要求如下： 1.有 Shopify 独立站商户资源：建站服务商、代运营、跨境社群群主、广告投手、ERP/物流/支付服务商优先； 2.了解独立站促销、折扣场景，能判断商户是否有真实折扣需求； 3.只对接真实经营的店铺（有商品、有流量或订单），不接受空店、测试店、批量注册； 4.能长期合作，按月稳定提供商户]]></description>
+            <link>https://eleduck.com/posts/2LfWo4</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/2LfWo4</guid>
+            <pubDate>Mon, 19 Oct 2026 13:32:33 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[寻找擅长 TikTok 或 LinkedIn 官方 API 代申请的个人／团队，两个平台分别报价]]></title>
+            <description><![CDATA[我们正在开发 ShopWIS 社媒管理平台，寻找擅长 TikTok 或 LinkedIn 官方 API 申请与审核 的个人或团队，协助完成公司自有应用的权限申请。 可以只承接其中一个平台，不要求同时精通两个平台；如均可承接，请分别报价。 *   已有中国大陆公司及香港公司，需要根据真实运营关系和官方要求评估申请主体。 *   业务方向：为企业提供海外社媒内容管理服务。 *  TikTok 申请需求]]></description>
+            <link>https://eleduck.com/posts/kRfZmE</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/kRfZmE</guid>
+            <pubDate>Mon, 19 Oct 2026 11:23:59 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[从打工人到独立开源创客：自研 60fps 空间演示工具的心路]]></title>
+            <description><![CDATA[从打工人到独立开源创客：自研 60fps 空间演示工具的心路 鸭友们好！我是专注底层工程与图形渲染的独立开发者。 在电鸭社区潜水了很久，经常看到很多远程开发者和出海创客分享自己逃离内卷、探索自由职业的心路。今天我也想结合自己过去这大半年的经历，和大家聊聊我为什么决心跳出大厂的流水线节奏，耗时数月独立手搓一款 60fps 电影级架构演说工具 —— FocusFlow 的全过程，以及从“被动打工人”到]]></description>
+            <link>https://eleduck.com/posts/BaflnZ</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/BaflnZ</guid>
+            <pubDate>Mon, 19 Oct 2026 10:57:13 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[外包】生鲜团购接龙小程序开发｜需有团购/分销小程序上线案例经验]]></title>
+            <description><![CDATA[项目背景 澳洲公司在中国大陆的线下生鲜团购项目，需要开发一款微信小程序。功能范围明确，有成熟竞品可以参考。 核心功能 - 接龙下单：团长发起接龙，用户在小程序里下单 - 团长分销：支持多个团长，按团长分别统计订单 - 佣金记账：自动计算各团长的订单量和佣金 - 同城自提：用户选择自提点，到点取货 - 用户资金线下结算，暂不需要接入线上支付 合作要求 - 必须有团购或分销类小程序的上线案例，沟通时请]]></description>
+            <link>https://eleduck.com/posts/EQfz0x</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/EQfz0x</guid>
+            <pubDate>Mon, 19 Oct 2026 10:10:18 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[AI 语音 Agent 在催收/客服呼叫中心落地，我踩过的 5 个坑]]></title>
+            <description><![CDATA[这几年一直带团队做 AI 语音 Agent，场景主要是催收、保险、电商客服，在东南亚和国内都有落地。Demo 很容易做出来，真正上生产才是难点。分享 5 个踩过的坑，给在做类似项目的朋友参考。 1. 延迟比"智商"更重要 电话里停顿超过 1.5 秒左右，用户就开始"喂？喂？"，然后挂断。ASR → LLM → TTS 三段必须全链路流式，还要支持用户随时打断（barge-in）。换一个更聪明但更慢]]></description>
+            <link>https://eleduck.com/posts/L5f0k9</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/L5f0k9</guid>
+            <pubDate>Mon, 19 Oct 2026 10:10:17 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[7000-10000rmb｜Remote | 广告客户执行 | 海外达人营销（3个月短期岗）]]></title>
+            <description><![CDATA[About us Fairy Global 一支纯粹且有灵魂的全女性团队，深耕全球红人营销领域，为品牌提供一站式整合营销全案解决方案。 与同频的你共赴成长! 🌟工作职责： · 负责客户对接与日常沟通； · 审核名单并提报客户确认； · 跟进博主内容制作进度； · 协助客户后续收款事宜； 🎯任职要求： · 1年以上相关工作经验； · 良好的英语沟通能力，会德语优先； · 有海外KOL行业经验者优先；]]></description>
+            <link>https://eleduck.com/posts/XNfOra</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/XNfOra</guid>
+            <pubDate>Mon, 19 Oct 2026 09:21:27 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[Senior SEO Strategist]]></title>
+            <description><![CDATA[About the role You'll own the performance of Khepri Digital's SEO accounts — the strategy, the delivery quality, and the results clients see. You'll lead a delivery team (link builders, two SEO Execut]]></description>
+            <link>https://eleduck.com/posts/gYfYva</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/gYfYva</guid>
+            <pubDate>Mon, 19 Oct 2026 08:43:48 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[求助：在厂里做开发的适合远程吗？]]></title>
+            <description><![CDATA[先介绍我目前的情况，从毕业就在外企制造业厂里做开发，做过Web开发，物联网开发，上位机软件开发，做过后端开发，算法开发，现在在做AI视觉模型开发，以及和AI相关的开发，比如LLM、智能体，非常熟练使用AI开发，有四年多的工作经验。 我目前的问题是职业走向转型期，我以前刚毕业的时候想着是走技术路线，然后转管理，但是我现在的想法又有些改变，我不想上下班打卡我想要弹性的工作时间，想要更自由的工作环境，和]]></description>
+            <link>https://eleduck.com/posts/98f9YD</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/98f9YD</guid>
+            <pubDate>Mon, 19 Oct 2026 07:50:33 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[AI Agent 应用工程师（远程兼职 / 项目制，可转长期）]]></title>
+            <description><![CDATA[【关于我们】 我们是 360 Stayz，www.360lease.com.au ，一家在澳大利亚运营的短租住宿与物业资产管理公司，业务覆盖房源获取、加盟商合作、房东服务、房客预订、维修与现场运营等环节。团队分布在澳洲主要城市，技术与运营协作主要以远程为主。 我们正在启动一个为期约 12 周的「AI Agent 并行建设计划」，目标是在一个统一的技术底座上，逐个搭建 12 个面向真实业务的智能体，]]></description>
+            <link>https://eleduck.com/posts/3EfRdD</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/3EfRdD</guid>
+            <pubDate>Mon, 19 Oct 2026 05:50:15 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[长期兼职 支付宝租赁小程序开发维护，懂预授权接口]]></title>
+            <description><![CDATA[找一个长期合作的兼职技术，部署维护系统，要求懂php，我们公司买了一套支付宝租赁系统源代码，需要部署到我们公司服务器，要和对方公司技术沟通。 ]]></description>
+            <link>https://eleduck.com/posts/ZXfBYm</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/ZXfBYm</guid>
+            <pubDate>Mon, 19 Oct 2026 05:35:30 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[36岁了，未来该怎么发展]]></title>
+            <description><![CDATA[最近一年AI发展越来越快了，从两年前开始从事AI开发，感觉AI都要掏空职场工作。 36岁了，13年工作经验，从上位机、物联网、桌面软件、web、服务器、运维、AI智能体，做产品设计和运营，SEO等都做过。 年龄是一大关卡，再找工作很难了，怎么办呢？ 我一直在做探索，意识到不能再靠打工了。必须尽快寻找出路了。现在职场环境非常恶劣，领导动不动就喷，还没有开始汇报就准备喷了。加班少就被针对，AI时代的开]]></description>
+            <link>https://eleduck.com/posts/1nfOq2</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/1nfOq2</guid>
+            <pubDate>Mon, 19 Oct 2026 05:17:48 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[从大厂出来，远程工作 4 年后，发现自己似乎本质不适合远程（古法手搓贴，已焦虑]]></title>
+            <description><![CDATA[background 2022 年初，在工作稳定，部门氛围友好，只是项目停滞的情况，wlb/不用通勤的诱惑下，毅然选择了裸辞寻找远程机会。 在紧张刺激的三个月找工作+upwork 闯荡后，寻找到了第一份真·外企+远程的工作，工作内容是将 salesforce 中的流程，从 0 到 1 迁移到自研的规则引擎中，作为上一份工作内容是开发低代码引擎的我来说这工作内容匹配度可以说是相当高了。 就这样，我带]]></description>
+            <link>https://eleduck.com/posts/GzfRz4</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/GzfRz4</guid>
+            <pubDate>Mon, 19 Oct 2026 04:41:42 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[直播舆情监控这个服务现在是否还有市场？怎么开发市场？]]></title>
+            <description><![CDATA[这个服务作为直播的隐形服务，金融行业需要，也会采购，其他行业有采购的必要性吗？ 作为单个产品进行市场销售是否有市场？毕竟现在直播已经很常态、相对规范了吧？ 如果只作为中大型企业的采购增值项，确实开发市场存在难度。 ]]></description>
+            <link>https://eleduck.com/posts/OGf1Wy</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/OGf1Wy</guid>
+            <pubDate>Mon, 19 Oct 2026 02:32:55 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[从贷款中介转 AI 自动化交付，最难的居然不是技术，是报价——请教各位]]></title>
+            <description><![CDATA[先交代下自己：沈阳人，早年在银行做贷款中介（给同行做后端那种），2024 年起转做 AI 自动化交付，主要接三类活：网站/电商数据采集（Python，源码交付）、重复流程自动化（n8n）、轻量 Agent 集成。 转过来才发现，最难的根本不是技术。爬虫、n8n 这些上手都快，真正卡住我的是报价和结尾款——我现在的做法是需求确认单列清、分三期款（预付 50 / 验收 30 / 稳定运行 20），但一]]></description>
+            <link>https://eleduck.com/posts/0XfxKA</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/0XfxKA</guid>
+            <pubDate>Sun, 18 Oct 2026 16:43:34 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[我每个月在 Cloudflare 上花多少钱？从白嫖 18 个月到月付 $72 的账单复盘]]></title>
+            <description><![CDATA[分享一篇技术出海的干货。我是 Cloudflare 资深用户，用了快十年，现在有大概 20 个域名，60+ Worker 在跑，每个月大概要花 $20+。最近几个月我几乎每个月都在被 Cloudflare 账单背刺，但是相对的，我也收获不少真实优化经验和最佳实践，相信会对大家有所帮助。 如果大家觉得文章有帮助，还望抽空去 X 上帮我点个赞，点个转帖，谢谢大家：https://x.com/meath]]></description>
+            <link>https://eleduck.com/posts/5Bf1X5</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/5Bf1X5</guid>
+            <pubDate>Sun, 18 Oct 2026 16:02:28 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[【全职远程】12K–15K/月｜Product Designer 产品设计师｜AI 短剧创作工具｜3–5 年经验]]></title>
+            <description><![CDATA[关于我们 我们是一支专注于 AI 短剧创作工具的团队，希望用 AI 降低短剧创作门槛，让创作者更高效地把故事转化为作品。 我们正在寻找一位 Product Designer（产品设计师），负责公司产品的用户体验与界面设计。你将围绕创作者的真实工作流程，参与从问题定义、方案探索到设计落地与持续迭代的全过程。 岗位职责 理解短剧创作者的需求与使用场景，通过用户访谈、反馈分析和可用性测试，识别关键体验问]]></description>
+            <link>https://eleduck.com/posts/z1fBN1</link>
+            <guid isPermaLink="true">https://eleduck.com/posts/z1fBN1</guid>
+            <pubDate>Sun, 18 Oct 2026 12:05:52 GMT</pubDate>
+        </item>
+    </channel>
+</rss>

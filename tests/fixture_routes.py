@@ -1,0 +1,41 @@
+ROUTES = [
+    ("greenhouse_flowdesk.json", "GET", "https://boards-api.greenhouse.io/v1/boards/flowdesk/jobs?content=true"),
+    ("lever_ethena.json", "GET", "https://api.lever.co/v0/postings/ethena?mode=json"),
+    ("lever-eu_aavelabs.json", "GET", "https://api.eu.lever.co/v0/postings/aavelabs?mode=json"),
+    ("ashby_keyrock.json", "GET", "https://api.ashbyhq.com/posting-api/job-board/keyrock?includeCompensation=true"),
+    ("workable_chaingpt.json", "GET", "https://apply.workable.com/api/v1/widget/accounts/chaingpt?details=true"),
+    ("recruitee_bitfinex.json", "GET", "https://bitfinex.recruitee.com/api/offers/"),
+    ("smartrecruiters_coinstats.json", "GET", "https://api.smartrecruiters.com/v1/companies/coinstats/postings?limit=100"),
+    ("bamboohr_fusang.json", "GET", "https://fusang.bamboohr.com/careers/list"),
+    ("breezy_zero-hash.json", "GET", "https://zero-hash.breezy.hr/json"),
+    ("teamtailor_spiko.xml", "GET", "https://spiko.teamtailor.com/jobs.rss"),
+    ("personio_finoa.xml", "GET", "https://finoa.jobs.personio.de/xml"),
+    ("rippling_halborn-inc.json", "GET", "https://ats.rippling.com/api/v2/board/halborn-inc/jobs"),
+    ("gem_agora.json", "GET", "https://api.gem.com/job_board/v0/agora/job_posts/"),
+    ("workday_bullish.json", "POST", "https://bullish.wd3.myworkdayjobs.com/wday/cxs/bullish/bullish/jobs"),
+    ("jobstash.json", "GET", "https://middleware.jobstash.xyz/jobs/list?page=1&limit=1000"),
+    ("getro_dragonfly.json", "POST", "https://api.getro.com/api/v2/collections/1118/search/jobs"),
+    ("consider_pantera.html", "GET", "https://jobs.panteracapital.com/jobs"),
+    ("consider_pantera.json", "POST", "https://jobs.panteracapital.com/api-boards/search-jobs"),
+    ("web3career.html", "GET", "https://web3.career/"),
+    ("cryptojobslist.xml", "GET", "https://api.cryptojobslist.com/jobs.rss"),
+    ("cryptocurrencyjobs.xml", "GET", "https://cryptocurrencyjobs.co/index.xml"),
+    ("web3vacancy.xml", "GET", "https://web3vacancy.com/feed.xml"),
+    ("cryptojobs.xml", "GET", "https://crypto.jobs/feed/rss"),
+    ("eleduck.xml", "GET", "https://eleduck.com/feed/latest.xml"),
+    ("rebase.json", "GET", "https://api.github.com/repos/rebase-network/who-is-hiring/issues?state=open&per_page=100"),
+    ("telegram_DeJob_Global.html", "GET", "https://t.me/s/DeJob_Global"),
+    ("telegram_DeJob_official.html", "GET", "https://t.me/s/DeJob_official"),
+    ("telegram_web3hiring.html", "GET", "https://t.me/s/web3hiring"),
+    ("mycareersfuture_blockchain.json", "GET",
+     "https://api.mycareersfuture.gov.sg/v2/jobs?search=blockchain&limit=100&page=0"),
+]
+
+BODIES = {
+    "getro_dragonfly.json": {"hitsPerPage": 20, "page": 0, "filters": "", "query": ""},
+    "workday_bullish.json": {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""},
+}
+HEADERS = {
+    "getro_dragonfly.json": {"accept": "application/json", "origin": "https://jobs.dragonfly.xyz",
+                             "referer": "https://jobs.dragonfly.xyz/"},
+}
