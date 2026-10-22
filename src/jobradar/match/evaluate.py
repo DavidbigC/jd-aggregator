@@ -11,7 +11,7 @@ PROMPT = ROOT / "seeds" / "match_prompt.md"
 TRACKS = ("analyst", "product", "research", "ops_strategy", "growth", "quant", "backend", "none")
 ANALYST_TYPES = ("product_data_analytics", "onchain_analytics", "bi_reporting", "token_market_research", "risk_fraud",
                  "compliance_kyc_aml", "trading_market_ops")
-KNOCKOUTS = ("right_to_work", "location", "language", "years", "licence", "clearance", "other")
+KNOCKOUTS = ("right_to_work", "location", "language", "licence")
 MET = ("yes", "partial", "no")
 CVS = re.search(r"Use exactly one of these names, or null:\n(.+)\n", PROMPT.read_text()).group(1).split("; ")
 SCORES = ("recruiter", "hiring_manager", "want")
@@ -53,8 +53,10 @@ def clean(data: dict) -> dict:
     except (KeyError, TypeError, ValueError):
         raise ValueError(f"missing or bad scores: {scores!r}"[:300])
     track = data.get("track") if data.get("track") in TRACKS else "none"
-    knockouts = [{"type": k.get("type") if k.get("type") in KNOCKOUTS else "other", "quote": _text(k.get("quote"))}
-                 for k in data.get("knockouts") or [] if isinstance(k, dict) and _text(k.get("quote"))]
+    quoted = [k for k in data.get("knockouts") or [] if isinstance(k, dict) and _text(k.get("quote"))]
+    knockouts = [{"type": k["type"], "quote": _text(k["quote"])} for k in quoted if k.get("type") in KNOCKOUTS]
+    # Years, skills and anything else are gaps, not eligibility: show them as risks so the job isn't hidden.
+    hard_asks = [f"Hard ask: “{_text(k['quote'], 150)}”" for k in quoted if k.get("type") not in KNOCKOUTS]
     return {
         "track": track,
         "analyst_type": data.get("analyst_type") if track == "analyst" and data.get("analyst_type") in ANALYST_TYPES
@@ -67,12 +69,13 @@ def clean(data: dict) -> dict:
         "knockouts": knockouts,
         "scores": s,
         "one_line": _text(data.get("one_line")),
-        "top_risks": _texts(data.get("top_risks"), 4),
+        "top_risks": (hard_asks + _texts(data.get("top_risks"), 4))[:4],
         "start_from": data.get("start_from") if data.get("start_from") in CVS else None,
         "lead_with": _texts(data.get("lead_with"), 5),
         "mirror_keywords": _texts(data.get("mirror_keywords"), 10),
         "interview_prep": _texts(data.get("interview_prep"), 5),
         "questions_for_recruiter": _texts(data.get("questions_for_recruiter"), 5),
+        "apply_notes": _texts(data.get("apply_notes"), 4),
     }
 
 

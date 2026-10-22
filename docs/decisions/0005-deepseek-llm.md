@@ -66,3 +66,5 @@ David wants all LLM work done inside the app, by a provider whose key they load 
 - **Speed and cost:** about 50 seconds and roughly 3,600 output tokens per job (mostly reasoning). A full run of about 130 jobs takes about 15 minutes at 8 jobs at a time, and costs about $1.30 off-peak or $2.70 at peak.
 - **Preference changes re-score everything.** Any change to the preferences makes every job due again; the confirm step shows the count and cost first.
 - **Restarts:** a server restart during a run leaves it marked interrupted. Pressing Run matcher again picks up the jobs that were not scored.
+
+**Prompt v2 (2026-10-22).** The first run's review (job_related `docs/research/2026-10-22-deepseek-matcher-review.md`) showed DeepSeek hiding good analyst jobs behind years and skill "knockouts". Knockouts are now eligibility only (right to work, location, language, licence), enforced in `clean()`; years and skills lower the recruiter score. Unset right to work counts as not confirmed, so country-limited jobs are knockouts until David states their rights.

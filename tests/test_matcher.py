@@ -63,6 +63,8 @@ def _result(**kw):
 @pytest.mark.parametrize("kw, expected", [
     ({}, ("apply_now", None)),
     ({"knockouts": [{"type": "location", "quote": "3 days in our London office"}]}, ("skip", "knockout")),
+    ({"knockouts": [{"type": "right_to_work", "quote": "must be authorized to work in the U.S."}]}, ("skip", "knockout")),
+    ({"knockouts": [{"type": "years", "quote": "6+ years of product analytics"}]}, ("apply_now", None)),
     ({"actually_remote": False}, ("skip", "knockout")),
     ({"scores": {"recruiter": 90, "hiring_manager": 90, "want": 40}}, ("skip", "low want")),
     ({"track": "backend", "scores": {"recruiter": 50, "hiring_manager": 50, "want": 70}}, ("stretch", None)),
@@ -78,10 +80,14 @@ def test_verdict_rules(kw, expected):
 def test_clean_drops_bad_values_and_unquoted_knockouts():
     r = evaluate.clean(_result(track="sales", start_from="Made Up CV", scores={"recruiter": "88", "hiring_manager": 120,
                                                                               "want": -5},
-                               knockouts=[{"type": "years", "quote": ""}, {"type": "weird", "quote": "US only"}]))
+                               knockouts=[{"type": "years", "quote": ""}, {"type": "other", "quote": "Use Java 17"},
+                                          {"type": "right_to_work", "quote": "US only"}],
+                               apply_notes=["Mention the word CANDYSHOP", "", 3, "a", "b", "c"]))
     assert r["track"] == "none" and r["start_from"] is None and r["analyst_type"] is None
     assert r["scores"] == {"recruiter": 88, "hiring_manager": 100, "want": 0}
-    assert r["knockouts"] == [{"type": "other", "quote": "US only"}]
+    assert r["knockouts"] == [{"type": "right_to_work", "quote": "US only"}]
+    assert r["top_risks"] == ["Hard ask: “Use Java 17”", "needs Looker"]
+    assert r["apply_notes"] == ["Mention the word CANDYSHOP", "3", "a", "b"]
     with pytest.raises(ValueError):
         evaluate.clean({"scores": {"recruiter": 1}})
 
@@ -103,7 +109,8 @@ def app_db(tmp_path, monkeypatch):
 
     def fake_chat(key, messages, **kw):
         calls.append(kw["model"])
-        return _result(), {"prompt_cache_hit_tokens": 4000, "prompt_cache_miss_tokens": 1000,
+        return _result(apply_notes=["Mention the word CANDYSHOP"]), {"prompt_cache_hit_tokens": 4000,
+                                                                     "prompt_cache_miss_tokens": 1000,
                            "completion_tokens": 3000}
 
     monkeypatch.setattr(deepseek, "chat_json", fake_chat)
@@ -144,6 +151,7 @@ def test_run_asks_before_spending_then_scores_in_background(app_db):
     assert client.get("/shortlist/run/status").headers.get("HX-Refresh") == "true"
     page = client.get("/shortlist").text
     assert "Scored by deepseek-v4-pro" in page and "DeepSeek's notes" in page and "Last run" in page
+    assert "To apply</span> Mention the word CANDYSHOP" in page
 
     r = client.post("/shortlist/run")
     assert "already scored" in r.text

@@ -14,6 +14,7 @@
     {% endif %}
     {% if e.why %}<p class="sl-why">{{ e.why }}</p>{% endif %}
     {% if e.risk %}<p class="sl-risk"><span class="tag warn">Watch out</span> {{ e.risk }}</p>{% endif %}
+    {% if e.notes and e.notes.apply_notes %}<p class="sl-apply"><span class="tag">To apply</span> {{ e.notes.apply_notes | join(' · ') }}</p>{% endif %}
     {% if e.start_cv %}<p class="muted sl-cv">Base CV: {{ e.start_cv }} <span title="The earlier tailored application CV closest to this job">(your earlier application CV)</span></p>{% endif %}
     {% if e.notes %}
     <details class="sl-notes">

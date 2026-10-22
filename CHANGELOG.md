@@ -28,3 +28,4 @@
 - 2026-10-22 fix: retry and log failed DeepSeek chat replies, and keep the typed message after an error
 - 2026-10-22 fix: send DeepSeek its past chat turns as JSON so JSON mode stops returning blank replies
 - 2026-10-22 feat: score the shortlist with DeepSeek from a Run matcher button, with a preference-driven prefilter and cost confirmation
+- 2026-10-22 fix: stop the matcher hiding jobs over years or skill gaps, catch US-only and office-city ads, and show how-to-apply notes
