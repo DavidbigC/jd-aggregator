@@ -21,6 +21,8 @@ def detect_lang(title: str | None, description: str | None = None) -> str | None
         if len(_HANGUL.findall(text)) * 3 >= cjk:
             return "ko"
         return "ja" if _KANA.search(text) else "zh"
+    if len(description or "") < 150 and text.isascii():
+        return "en"
     try:
         return detect(text).split("-")[0]
     except LangDetectException:
