@@ -85,3 +85,10 @@ def test_same_generic_url_does_not_merge_different_titles(conn):
 def test_fts_index_is_searchable(conn):
     ingest(conn, [P(title="Rust Engineer", description="low latency matching engine")], now=T0)
     assert conn.execute("SELECT rowid FROM jobs_fts WHERE jobs_fts MATCH '\"matching\"'").fetchone() is not None
+
+
+def test_undated_new_job_gets_a_date_only_when_the_source_was_polled_before(conn):
+    ingest(conn, [P(source_job_id="1")], T0)
+    ingest(conn, [P(source_job_id="2", title="Designer")], T1, trust_new=True)
+    dates = dict(conn.execute("SELECT title, posted_at FROM jobs").fetchall())
+    assert dates == {"Engineer": None, "Designer": T1}

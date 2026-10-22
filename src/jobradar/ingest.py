@@ -18,14 +18,14 @@ def resolve_company(conn, name: str | None, website: str | None = None, now: str
     return cur.lastrowid
 
 
-def ingest(conn, postings: list[Posting], now: str | None = None) -> dict:
+def ingest(conn, postings: list[Posting], now: str | None = None, trust_new: bool = False) -> dict:
     now = now or now_iso()
-    new_jobs = sum(_ingest_one(conn, p, now) for p in postings)
+    new_jobs = sum(_ingest_one(conn, p, now, trust_new) for p in postings)
     conn.commit()
     return {"fetched": len(postings), "new_jobs": new_jobs}
 
 
-def _ingest_one(conn, p: Posting, now: str) -> bool:
+def _ingest_one(conn, p: Posting, now: str, trust_new: bool) -> bool:
     akey = p.ats_key or ats_key_from_url(p.url)
     ukey = url_key(p.url)
     seen = conn.execute("SELECT id, job_id FROM sightings WHERE source = ? AND source_job_id = ?",
@@ -40,7 +40,7 @@ def _ingest_one(conn, p: Posting, now: str) -> bool:
     job_id, match = _find_job(conn, company_id, tkey, akey, ukey, p, now)
     created = job_id is None
     if created:
-        job_id, match = _create(conn, company_id, tkey, p, now), "exact"
+        job_id, match = _create(conn, company_id, tkey, p, now, p.posted_at or (now if trust_new else None)), "exact"
     else:
         _merge(conn, job_id, p, now)
     conn.execute(
@@ -79,14 +79,14 @@ def _find_job(conn, company_id, tkey, akey, ukey, p, now):
     return None, None
 
 
-def _create(conn, company_id, tkey, p, now) -> int:
+def _create(conn, company_id, tkey, p, now, posted_at) -> int:
     locs = _uniq(p.locations)
     cur = conn.execute(
         "INSERT INTO jobs (company_id, title, title_key, description, desc_from_ats, locations, regions, remote, "
         "salary, apply_url, posted_at, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (company_id, p.title.strip(), tkey, p.description, int(p.from_ats and bool(p.description)),
          json.dumps(locs, ensure_ascii=False), json.dumps(regions_for(locs)), int(bool(p.remote) or is_remote(locs)),
-         p.salary, p.url, p.posted_at, now, now),
+         p.salary, p.url, posted_at, now, now),
     )
     _index(conn, cur.lastrowid)
     return cur.lastrowid

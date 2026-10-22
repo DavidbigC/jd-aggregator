@@ -1,7 +1,7 @@
 import defusedxml.ElementTree as ET
 
 from ..models import Posting
-from ..normalize import ats_key_from_url, html_to_text, to_iso
+from ..normalize import ats_key_from_url, html_to_text, now_iso, relative_posted, to_iso
 from .base import salary_text
 
 
@@ -160,7 +160,7 @@ def gem(http, slug, company):
 def workday(http, slug, company):
     tenant, wd, site = slug.split("|")
     base = f"https://{tenant}.{wd}.myworkdayjobs.com"
-    out, offset, total = [], 0, None
+    out, offset, total, now = [], 0, None, now_iso()
     while total is None or offset < total:
         data = http.post(f"{base}/wday/cxs/{tenant}/{site}/jobs",
                          json={"appliedFacets": {}, "limit": 20, "offset": offset, "searchText": ""}).json()
@@ -170,7 +170,8 @@ def workday(http, slug, company):
             break
         for j in posts:
             out.append(_post("workday", slug, company, source_job_id=j["externalPath"], title=j["title"],
-                             url=f"{base}/en-US/{site}{j['externalPath']}", locations=[j.get("locationsText") or ""]))
+                             url=f"{base}/en-US/{site}{j['externalPath']}", locations=[j.get("locationsText") or ""],
+                             posted_at=relative_posted(j.get("postedOn"), now)))
         offset += len(posts)
     return out
 

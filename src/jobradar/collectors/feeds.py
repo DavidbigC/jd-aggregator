@@ -4,10 +4,9 @@ import re
 import defusedxml.ElementTree as ET
 
 from ..models import Posting
-from ..normalize import html_to_text, to_iso
+from ..normalize import html_to_text, is_web3, to_iso
 
 DC = "{http://purl.org/dc/elements/1.1/}"
-WEB3_WORDS = re.compile(r"web3|crypto|blockchain|defi|solidity|nft|区块链|加密货币|数字货币|币圈|链上|交易所|量化|钱包", re.I)
 
 
 def _items(http, url: str):
@@ -62,7 +61,7 @@ def eleduck(http) -> list[Posting]:
     out = []
     for it in _items(http, "https://eleduck.com/feed/latest.xml"):
         title, desc = (it.findtext("title") or "").strip(), it.findtext("description") or ""
-        if WEB3_WORDS.search(f"{title} {desc}"):
+        if is_web3(f"{title} {desc}"):
             out.append(Posting(source="eleduck", source_job_id=_slug(it.findtext("link")), company="未具名 (电鸭)",
                                title=title, url=it.findtext("link"), description=html_to_text(desc),
                                posted_at=to_iso(it.findtext("pubDate"))))

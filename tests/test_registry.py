@@ -22,3 +22,19 @@ def test_discover_boards_from_aggregator_urls(conn):
     assert discover_boards(conn, ps) == 1
     row = conn.execute("SELECT c.key, b.ats, b.slug, b.origin FROM boards b JOIN companies c ON c.id = b.company_id")
     assert tuple(row.fetchone()) == ("kraken", "ashby", "kraken.com", "discovered")
+
+
+def test_discover_skips_boards_that_differ_only_by_case(conn):
+    conn.execute("INSERT INTO companies (key, name, created_at) VALUES ('bullish', 'Bullish', '2026-10-21T00:00:00Z')")
+    conn.execute("INSERT INTO boards (company_id, ats, slug, origin) VALUES (1, 'workday', 'bullish|wd3|bullish', 'seed')")
+    p = Posting(source="getro:x", source_job_id="1", company="Bullish", title="Eng",
+                url="https://bullish.wd3.myworkdayjobs.com/en-US/Bullish/job/HK/Eng_R1")
+    assert discover_boards(conn, [p]) == 0
+
+
+def test_load_seed_reads_crypto_only(conn, tmp_path):
+    seed = tmp_path / "boards.csv"
+    seed.write_text("company,website,ats,slug,origin,enabled,crypto_only\n"
+                    "DBS,,workday,dbs|wd3|dbs_careers,research,1,1\n")
+    load_seed(conn, seed)
+    assert conn.execute("SELECT crypto_only FROM boards").fetchone()[0] == 1

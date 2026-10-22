@@ -13,7 +13,7 @@ SOURCE_GROUPS = [
 ]
 POSTED_DAYS = {"24h": 1, "3d": 3, "7d": 7, "30d": 30, "all": None}
 ORDER = {
-    "posted": "COALESCE(j.posted_at, j.first_seen_at) DESC, j.id DESC",
+    "posted": "j.posted_at IS NULL, j.posted_at DESC, j.id DESC",
     "new": "j.first_seen_at DESC, j.id DESC",
     "company": "c.name COLLATE NOCASE, j.title",
 }
@@ -37,7 +37,7 @@ def _where(f: Filters, now: str):
         where.append("j.last_seen_at >= ?")
         args.append(ago_iso(now, days=STALE_DAYS))
     if days := POSTED_DAYS.get(f.posted):
-        where.append("COALESCE(j.posted_at, j.first_seen_at) >= ?")
+        where.append("j.posted_at >= ?")
         args.append(ago_iso(now, days=days))
     terms = f.q.replace('"', " ").split()
     if long_terms := [t for t in terms if len(t) >= 3]:

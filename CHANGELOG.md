@@ -12,3 +12,5 @@
 - 2026-10-21 feat: add local web UI to browse deduped jobs
 - 2026-10-21 fix: disable 69 seed boards that return 404
 - 2026-10-21 feat: fetch hosts concurrently and commit each ATS board as it lands
+- 2026-10-22 fix: posted-date filter no longer counts undated backfill jobs as new; parse Workday relative dates
+- 2026-10-22 fix: skip case-duplicate ATS boards and keep only crypto roles from non-crypto companies

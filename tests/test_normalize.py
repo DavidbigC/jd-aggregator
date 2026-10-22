@@ -1,5 +1,6 @@
-from jobradar.normalize import (ats_board_from_url, ats_key_from_url, company_key, html_to_text,
-                                regions_for, is_remote, shingles, similarity, title_key, to_iso, url_key)
+from jobradar.normalize import (ats_board_from_url, ats_key_from_url, company_key, html_to_text, is_web3,
+                                regions_for, is_remote, relative_posted, shingles, similarity, title_key, to_iso,
+                                url_key)
 
 
 def test_company_key_strips_suffixes_and_applies_aliases():
@@ -73,3 +74,20 @@ def test_similarity_separates_copies_from_different_jobs():
     assert similarity(a, c) < 0.2
     assert similarity(a, truncated) >= 0.85
     assert similarity(a, set()) == 0.0
+
+
+def test_relative_posted_reads_workday_text():
+    now = "2026-10-22T12:00:00Z"
+    assert relative_posted("Posted Today", now) == now
+    assert relative_posted("Posted Yesterday", now) == "2026-10-21T12:00:00Z"
+    assert relative_posted("Posted 5 Days Ago", now) == "2026-10-17T12:00:00Z"
+    assert relative_posted("Posted 30+ Days Ago", now) == "2026-09-21T12:00:00Z"
+    assert relative_posted(None, now) is None
+
+
+def test_is_web3_matches_many_languages_but_not_cryptography():
+    for text in ("Senior Solidity Engineer", "区块链工程师", "Разработчик блокчейн", "블록체인 개발자", "暗号資産 営業",
+                 "Head of Digital Assets", "Ingénieur cryptomonnaie"):
+        assert is_web3(text), text
+    assert not is_web3("Cryptography Engineer, Payments")
+    assert not is_web3("Relationship Manager, Private Banking")

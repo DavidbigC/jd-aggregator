@@ -8,7 +8,7 @@ from .collectors.ats import ADAPTERS
 from .config import DATA_DIR, INTERVALS
 from .http import Http
 from .ingest import ingest
-from .normalize import ago_iso, now_iso
+from .normalize import ago_iso, is_web3, now_iso
 from .registry import discover_boards
 
 SOURCES = ["ats", *AGGREGATORS]
@@ -35,22 +35,29 @@ def _fetch_board(http, b) -> tuple[list, str]:
 
 
 def _run_ats(conn, http, now: str) -> dict:
-    boards = conn.execute("SELECT b.id, b.ats, b.slug, c.name FROM boards b JOIN companies c ON c.id = b.company_id "
-                          "WHERE b.enabled = 1 ORDER BY b.id").fetchall()
+    boards = conn.execute("SELECT b.id, b.ats, b.slug, b.crypto_only, b.last_polled_at, b.last_status, c.name "
+                          "FROM boards b JOIN companies c ON c.id = b.company_id WHERE b.enabled = 1 ORDER BY b.id"
+                          ).fetchall()
     stats = {"fetched": 0, "new_jobs": 0}
     with ThreadPoolExecutor(ATS_WORKERS) as pool:
         futures = {pool.submit(_fetch_board, http, b): b for b in boards}
         for fut in as_completed(futures):
             postings, status = fut.result()
+            b = futures[fut]
+            if b["crypto_only"]:
+                postings = [p for p in postings if is_web3(p.title)]
             conn.execute("UPDATE boards SET last_polled_at = ?, last_status = ?, last_count = ? WHERE id = ?",
-                         (now, status, len(postings), futures[fut]["id"]))
-            s = ingest(conn, postings, now)
+                         (now, status, len(postings), b["id"]))
+            polled_before = bool(b["last_polled_at"]) and (b["last_status"] or "").startswith("ok")
+            s = ingest(conn, postings, now, trust_new=polled_before)
             stats = {k: stats[k] + s[k] for k in stats}
     return stats
 
 
 def run_source(conn, http, name: str, now: str | None = None, fetched: Future | None = None) -> dict:
     now = now or now_iso()
+    polled_before = bool(conn.execute("SELECT 1 FROM source_runs WHERE source = ? AND status = 'ok' LIMIT 1",
+                                      (name,)).fetchone())
     run_id = conn.execute("INSERT INTO source_runs (source, started_at, status) VALUES (?, ?, 'running')",
                           (name, now)).lastrowid
     conn.commit()
@@ -59,7 +66,7 @@ def run_source(conn, http, name: str, now: str | None = None, fetched: Future | 
             stats = _run_ats(conn, http, now)
         else:
             postings = fetched.result() if fetched else AGGREGATORS[name](http)
-            stats = ingest(conn, postings, now)
+            stats = ingest(conn, postings, now, trust_new=polled_before)
             discover_boards(conn, postings)
         result = {"status": "ok", "fetched": stats["fetched"], "new_jobs": stats["new_jobs"], "error": None}
     except Exception as e:

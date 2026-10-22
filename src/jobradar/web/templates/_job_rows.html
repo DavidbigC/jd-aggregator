@@ -7,7 +7,7 @@
   </div>
   <div class="job-meta">
     {% if j.salary %}<div class="salary">{{ j.salary }}</div>{% endif %}
-    <div>{{ (j.posted_at or j.first_seen_at) | ago }}</div>
+    <div>{% if j.posted_at %}{{ j.posted_at | ago }}{% else %}<span title="No posted date; first seen {{ j.first_seen_at | ago }}">date unknown</span>{% endif %}</div>
     <div class="srcs">{% for k in j.kinds %}<span class="src src-{{ k }}">{{ k }}</span>{% endfor %}{% if j.n_sources > 1 %}<span class="n">×{{ j.n_sources }}</span>{% endif %}</div>
   </div>
 </li>

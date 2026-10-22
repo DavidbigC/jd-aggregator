@@ -44,3 +44,14 @@ def test_poll_prefetches_aggregators_and_ingests_each(conn, monkeypatch, tmp_pat
         "b": lambda http: 1 / 0})
     results = dict(runner.poll(conn, sources=["a", "b"], force=True, http=object(), log=lambda m: None))
     assert results["a"]["new_jobs"] == 1 and results["b"]["status"] == "error"
+
+
+def test_crypto_only_boards_keep_only_web3_postings(conn, monkeypatch):
+    conn.execute("INSERT INTO companies (key, name, created_at) VALUES ('dbs', 'DBS', '2026-10-21T00:00:00Z')")
+    conn.execute("INSERT INTO boards (company_id, ats, slug, origin, crypto_only) VALUES (1, 'workday', 'dbs', 'seed', 1)")
+    monkeypatch.setitem(runner.ADAPTERS, "workday", lambda http, slug, co: [
+        Posting(source="ats:workday:dbs", source_job_id=str(i), company=co, title=t, from_ats=True)
+        for i, t in enumerate(["Digital Assets Custody Lead", "Branch Manager"])])
+    r = runner.run_source(conn, None, "ats")
+    assert r["fetched"] == 1
+    assert [t for (t,) in conn.execute("SELECT title FROM jobs")] == ["Digital Assets Custody Lead"]

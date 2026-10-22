@@ -42,6 +42,33 @@ def to_iso(value) -> str | None:
     return dt.astimezone(timezone.utc).strftime(ISO)
 
 
+def relative_posted(text: str | None, now: str) -> str | None:
+    t = (text or "").lower()
+    if "today" in t:
+        return ago_iso(now)
+    if "yesterday" in t:
+        return ago_iso(now, days=1)
+    if m := re.search(r"(\d+)(\+?)\s*days?", t):
+        return ago_iso(now, days=int(m.group(1)) + bool(m.group(2)))
+    return None
+
+
+_WEB3 = re.compile(
+    r"web3|crypto(?!graph)|blockchain|defi\b|solidity|\bnft|stablecoin|bitcoin|ethereum|solana|smart contract|"
+    r"on-?chain|digital assets?|tokeni[sz]|virtual asset|"
+    r"区块链|區塊鏈|加密货币|加密貨幣|数字货币|數位貨幣|币圈|幣圈|链上|鏈上|交易所|量化|钱包|錢包|"
+    r"блокчейн|крипт|"
+    r"블록체인|암호화폐|가상자산|"
+    r"ブロックチェーン|暗号資産|仮想通貨|"
+    r"kryptow|krypto|cryptomonnaie|crypto-?actif|criptomoned|criptoativ|criptomoeda|tiền mã hóa|tiền điện tử",
+    re.I,
+)
+
+
+def is_web3(text: str | None) -> bool:
+    return bool(_WEB3.search(text or ""))
+
+
 _SUFFIX = re.compile(
     r"\b(inc|incorporated|ltd|limited|llc|co|corp|corporation|company|group|holdings|technologies|"
     r"technology|gmbh|ag|sa|pte|plc|bv|labs?|foundation|network|protocol)\b\.?"
