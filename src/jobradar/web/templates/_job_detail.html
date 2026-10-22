@@ -1,7 +1,7 @@
 <article class="jd">
   <button class="ghost close" onclick="document.getElementById('detail').innerHTML = '<p class=&quot;muted empty&quot;>Select a job to see details.</p>'">Close</button>
   <h2>{{ job.title }}</h2>
-  <p class="jd-co"><a href="/?company={{ job.company_id }}&posted=all">{{ job.company }}</a>{% if job.website %} · <a href="{{ job.website }}" target="_blank" rel="noopener">website ↗</a>{% endif %}</p>
+  <p class="jd-co"><a href="/?company={{ job.company_id }}&posted=all&sector=all">{{ job.company }}</a>{% if job.website %} · <a href="{{ job.website }}" target="_blank" rel="noopener">website ↗</a>{% endif %}</p>
   <p class="jd-meta">{{ job.locations | join(' / ') }}{% if job.remote %} · Remote{% endif %}{% if job.salary %} · {{ job.salary }}{% endif %}</p>
   <p class="jd-meta muted">Posted {{ job.posted_at | ago if job.posted_at else 'date unknown' }} · first seen {{ job.first_seen_at | ago }} · last seen {{ job.last_seen_at | ago }}</p>
   {% if job.apply_url %}<p><a class="btn" href="{{ job.apply_url }}" target="_blank" rel="noopener">Open posting ↗</a></p>{% endif %}

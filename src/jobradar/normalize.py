@@ -55,7 +55,9 @@ def relative_posted(text: str | None, now: str) -> str | None:
 
 _WEB3 = re.compile(
     r"web3|crypto(?!graph)|blockchain|defi\b|solidity|\bnft|stablecoin|bitcoin|ethereum|solana|smart contract|"
-    r"on-?chain|digital assets?|tokeni[sz]|virtual asset|"
+    r"on-?chain|digital assets?|tokeni[sz]|virtual asset|staking|rollups?\b|zk-?(proof|snark|stark|evm|vm|rollup)|"
+    r"zero[- ]knowledge|\bevm\b|\bdapps?\b|\bdaos?\b|tokenomics|airdrop|memecoin|self-custod|\bdex\b|"
+    r"layer[- ]?(1|2|one|two)\b|decentrali[sz]ed (finance|exchange|application|protocol|network)|"
     r"区块链|區塊鏈|加密货币|加密貨幣|数字货币|數位貨幣|币圈|幣圈|链上|鏈上|交易所|量化|钱包|錢包|"
     r"блокчейн|крипт|"
     r"블록체인|암호화폐|가상자산|"

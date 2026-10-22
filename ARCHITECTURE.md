@@ -12,9 +12,9 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 **Job pages.** `detail.parse()` reads the schema.org `JobPosting` JSON-LD most job sites publish, then known description containers (LinkedIn), then trafilatura main text.
 
 ## Data model (SQLite, data/jobradar.db)
-- **companies** — one row per normalised company key. Aliases are applied, e.g. Payward → Kraken.
+- **companies** — one row per normalised company key. Aliases are applied, e.g. Payward → Kraken. `sector` (crypto / other) drives the default "Crypto companies" view; `sector_source` records which rule set it.
 - **boards** — ATS boards to poll. Seeded from seeds/boards.csv and auto-discovered from aggregator URLs (case-insensitive). `crypto_only` boards (DBS, Crusoe, DRW, Robinhood) keep only crypto-titled roles.
-- **jobs** — canonical jobs. The description prefers the ATS copy, then the longest job-page copy. `lang` is detected from title + description; `enriched_at` / `enrich_status` record the last job-page fetch.
+- **jobs** — canonical jobs. The description prefers the ATS copy, then the longest job-page copy. `lang` is detected from title + description; `enriched_at` / `enrich_status` record the last job-page fetch. `role`, `seniority`, `countries` (ISO-2 list) and `remote_scope` (anywhere / restricted) come from classify.py.
 - **sightings** — every (source, source_job_id) where a job was seen.
   - kind = source family (ats, getro, telegram, seek, …)
   - match = exact | probable
@@ -43,6 +43,23 @@ The "posted" filter uses `posted_at` only. A new job without a date gets `posted
 ## Enrichment (enrich.py)
 Each run takes up to 400 active jobs that have no description, one under 200 characters, or no date, and that were not tried in the last 7 days. For each job it tries up to three URLs (detail_url, apply link, other sightings) on 8 threads. A result is accepted only if its title shares at least half the job title's words, so a redirect to a generic careers page is not stored.
 
+## Classification (classify.py)
+- **Company sector.** Recomputed at the end of every poll. Rules in order, first match wins:
+  1. Override in seeds/company_sectors.csv, or set with the toggle on the Companies page, which appends to that file.
+  2. A `crypto_only` board → other.
+  3. A crypto word in the company name → crypto.
+  4. At least 40% of its jobs use a strong crypto term (`is_web3`) → crypto.
+  5. A seed board plus some evidence: fewer than 5 jobs, any strong term, or 20% of jobs using two or more weak terms (protocol, network, token, wallet…) → crypto.
+  6. Seen on a crypto board, with at least 20% strong terms → crypto.
+  7. Otherwise → other.
+
+  Neither the source nor the job text is enough on its own (see docs/decisions/0003). The 479 companies with 5+ jobs, and the small companies seen on crypto boards, were reviewed by hand on 2026-10-22.
+- **Job fields.** Set on create, merge and enrichment:
+  - role: 15 families, from an ordered title regex in several languages.
+  - seniority: from title words; mid when none match.
+  - countries: place words, plus a trailing ISO or US-state code.
+  - remote_scope: anywhere unless a country or region is named.
+
 ## Layout
 - **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, `__main__`
 - **src/jobradar/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
@@ -51,7 +68,9 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running
-python -m jobradar seed | poll [--source NAME] [--force] | relang | serve [--port N]
+python -m jobradar seed | poll [--source NAME] [--force] | relang | reclassify | serve [--port N]
+
+`seed` also loads seeds/company_sectors.csv. `reclassify` recomputes every job's fields and every company's sector.
 
 - **First time:** `seed`, then `poll --force`, then `serve`. A full poll takes about 8 minutes. Aggregators are fetched in background threads while the ATS pass runs with 8 workers; the 1 req/s per-host limit still holds, so getro (22 networks on one API host, ~7.5 min) sets the floor. The ATS pass took 4 min for ~9.8k jobs on 2026-10-21. Each ATS board is committed as it lands, so the UI fills in during the run. All SQLite writes stay on the main thread.
 - **Scheduling:** launchd/com.davidc.jobradar.poll.plist runs `poll` every 15 minutes, and each source decides whether it is due. launchd/com.davidc.jobradar.web.plist keeps the UI running.
@@ -82,3 +101,5 @@ python -m jobradar seed | poll [--source NAME] [--force] | relang | serve [--por
 - **An API or feed:** write `collect(http) -> list[Posting]`, register it in collectors/__init__.py and config.INTERVALS, record a fixture (`scripts/record_fixtures.py NAME`) and add a test.
 
 Not added (2026-10-22): Indeed, StepStone and Glassdoor (still blocked through CloakBrowser), BOSS直聘 (login wall), Naukri (mostly noise), Wellfound (stale role pages), Welcome to the Jungle (Algolia keys not yet found), BeInCrypto (no job links), useweb3 (closed).
+
+Major crypto employers without a usable careers feed (2026-10-22): KuCoin, HTX, MEXC, Bitget, Upbit/Dunamu, OSL, Matrixport/BIT, Messari, Arkham, Glassnode and Kaiko. Their careers pages are JavaScript apps on custom backends; HashKey's WordPress API returns no job data. Their jobs still arrive through LinkedIn, getro and jobstash where posted. bitFlyer is collected from its Jobcan pages (sites.py).

@@ -19,3 +19,7 @@
 - 2026-10-22 feat: add 22 job sources across Asia, Europe and Russia/Ukraine, plus LinkedIn and remote boards
 - 2026-10-22 fix: treat short ASCII-only job text as English instead of guessing a language
 - 2026-10-22 fix: cut the CloakBrowser per-page wait from 4s to 1.5s, waiting longer only on challenge pages
+- 2026-10-22 feat: show only crypto companies by default, with per-company sector rules and overrides
+- 2026-10-22 feat: filter jobs by role, seniority, country, remote-anywhere, salary shown and excluded words
+- 2026-10-22 feat: collect bitFlyer careers and Nansen's Ashby board
+- 2026-10-22 fix: take getro company names from LinkedIn URLs when the network mislabels them

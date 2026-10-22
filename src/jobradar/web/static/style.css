@@ -101,3 +101,13 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .filters { position: static; }
   .stats { display: none; }
 }
+
+.filters fieldset select { margin: 4px 0; }
+.more { display: flex; flex-direction: column; gap: 10px; }
+.more summary { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.more[open] summary { margin-bottom: 8px; }
+.more input[type=search] { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel); color: var(--ink); font: inherit; }
+.sector { white-space: nowrap; }
+.tag.muted-tag { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+button.tiny { margin-left: 6px; padding: 1px 8px; font-size: 11px; font-weight: 500; }

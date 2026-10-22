@@ -1,5 +1,6 @@
 import json
 
+from .classify import job_values
 from .config import MATCH_WINDOW_DAYS, SIMILARITY_THRESHOLD
 from .lang import detect_lang
 from .models import Posting
@@ -83,13 +84,15 @@ def _find_job(conn, company_id, tkey, akey, ukey, p, now):
 
 def _create(conn, company_id, tkey, p, now, posted_at) -> int:
     locs = _uniq(p.locations)
+    remote = int(bool(p.remote) or is_remote(locs))
     cur = conn.execute(
         "INSERT INTO jobs (company_id, title, title_key, description, desc_from_ats, locations, regions, remote, "
-        "salary, apply_url, posted_at, first_seen_at, last_seen_at, lang) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "salary, apply_url, posted_at, first_seen_at, last_seen_at, lang, role, seniority, countries, remote_scope) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (company_id, p.title.strip(), tkey, p.description, int(p.from_ats and bool(p.description)),
-         json.dumps(locs, ensure_ascii=False), json.dumps(regions_for(locs)), int(bool(p.remote) or is_remote(locs)),
-         p.salary, p.url, posted_at, now, now, detect_lang(p.title, p.description)),
+         json.dumps(locs, ensure_ascii=False), json.dumps(regions_for(locs)), remote,
+         p.salary, p.url, posted_at, now, now, detect_lang(p.title, p.description),
+         *job_values(p.title.strip(), locs, remote)),
     )
     _index(conn, cur.lastrowid)
     return cur.lastrowid
@@ -110,6 +113,7 @@ def _merge(conn, job_id, p, now) -> None:
         (desc, from_ats, json.dumps(locs, ensure_ascii=False), json.dumps(regions_for(locs)),
          int(bool(j["remote"]) or bool(p.remote) or is_remote(locs)), p.salary, apply_url, posted, now, job_id),
     )
+    _classify(conn, job_id)
     if upgrade:
         conn.execute("UPDATE jobs SET lang = ? WHERE id = ?", (detect_lang(j["title"], desc), job_id))
         _index(conn, job_id)
@@ -127,10 +131,17 @@ def apply_detail(conn, job_id: int, d, now: str, status: str) -> bool:
              json.dumps(regions_for(locs)), int(bool(j["remote"]) or bool(d.remote) or is_remote(locs)), d.salary,
              d.posted_at, detect_lang(j["title"], d.description if better else j["description"]), job_id),
         )
+        _classify(conn, job_id)
     conn.execute("UPDATE jobs SET enriched_at = ?, enrich_status = ? WHERE id = ?", (now, status, job_id))
     if better:
         _index(conn, job_id)
     return better or bool(d and d.posted_at and not j["posted_at"])
+
+
+def _classify(conn, job_id: int) -> None:
+    j = conn.execute("SELECT title, locations, remote FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    conn.execute("UPDATE jobs SET role = ?, seniority = ?, countries = ?, remote_scope = ? WHERE id = ?",
+                 (*job_values(j["title"], json.loads(j["locations"]), j["remote"]), job_id))
 
 
 def _index(conn, job_id: int) -> None:

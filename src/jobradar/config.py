@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.environ.get("JOBRADAR_DATA", ROOT / "data"))
 DB_PATH = DATA_DIR / "jobradar.db"
 SEED_CSV = ROOT / "seeds" / "boards.csv"
+SECTORS_CSV = ROOT / "seeds" / "company_sectors.csv"
 
 STALE_DAYS = 10
 MATCH_WINDOW_DAYS = 45
@@ -46,6 +47,7 @@ INTERVALS = {
     "remote3": 180,
     "foresight": 180,
     "learnblockchain": 360,
+    "bitflyer": 720,
     "enrich": 30,
 }
 HOST_INTERVALS = {"www.linkedin.com": 6.0}

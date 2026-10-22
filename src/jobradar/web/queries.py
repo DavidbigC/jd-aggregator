@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass, field
 
+from ..classify import COUNTRIES, ROLES, SENIORITY
 from ..config import INTERVALS, STALE_DAYS
 from ..lang import NAMES
 from ..normalize import ago_iso, now_iso
@@ -16,7 +17,7 @@ SOURCE_GROUPS = [
     ("rocketpunch", "Rocketpunch (KR)"), ("green", "Green (JP)"), ("habr", "Habr Career (RU)"), ("hh", "hh.ru (RU)"),
     ("djinni", "Djinni (UA)"), ("dou", "DOU (UA)"), ("justjoin", "Just Join IT (PL)"), ("nofluff", "No Fluff Jobs (PL)"),
     ("arbeitnow", "Arbeitnow (DE)"), ("berlinstartupjobs", "Berlin Startup Jobs"), ("cutshort", "Cutshort (IN)"),
-    ("itviec", "ITviec (VN)"),
+    ("itviec", "ITviec (VN)"), ("bitflyer", "bitFlyer careers (JP)"),
     ("board-only", "Not on any company ATS"),
 ]
 POSTED_DAYS = {"24h": 1, "3d": 3, "7d": 7, "30d": 30, "all": None}
@@ -32,12 +33,22 @@ class Filters:
     q: str = ""
     posted: str = "7d"
     region: str = ""
-    remote: bool = False
+    remote: str = ""
     source: str = ""
     company: int | None = None
     stale: bool = False
     sort: str = "posted"
     lang: list[str] = field(default_factory=list)
+    sector: str = "crypto"
+    role: list[str] = field(default_factory=list)
+    seniority: list[str] = field(default_factory=list)
+    country: str = ""
+    salary: bool = False
+    exclude: str = ""
+
+    @property
+    def more_set(self) -> bool:
+        return bool(self.salary or self.exclude or self.lang or self.source)
 
 
 def _where(f: Filters, now: str):
@@ -55,13 +66,30 @@ def _where(f: Filters, now: str):
     for t in (t for t in terms if len(t) < 3):
         where.append("(j.title LIKE ? OR c.name LIKE ?)")
         args += [f"%{t}%", f"%{t}%"]
-    if f.lang:
-        where.append(f"j.lang IN ({', '.join('?' * len(f.lang))})")
-        args += f.lang
+    for t in f.exclude.replace('"', " ").split():
+        if len(t) >= 3:
+            where.append("j.id NOT IN (SELECT rowid FROM jobs_fts WHERE jobs_fts MATCH ?)")
+            args.append(f'"{t}"')
+        else:
+            where.append("j.title NOT LIKE ?")
+            args.append(f"%{t}%")
+    for col, values in (("j.lang", f.lang), ("j.role", f.role), ("j.seniority", f.seniority)):
+        if values:
+            where.append(f"{col} IN ({', '.join('?' * len(values))})")
+            args += values
+    if f.sector == "crypto":
+        where.append("c.sector = 'crypto'")
+    if f.country:
+        where.append("EXISTS (SELECT 1 FROM json_each(j.countries) WHERE value = ?)")
+        args.append(f.country)
+    if f.salary:
+        where.append("j.salary IS NOT NULL")
     if f.region:
         where.append("j.regions LIKE ?")
         args.append(f'%"{f.region}"%')
-    if f.remote:
+    if f.remote == "anywhere":
+        where.append("j.remote_scope = 'anywhere'")
+    elif f.remote:
         where.append("j.remote = 1")
     if f.company:
         where.append("j.company_id = ?")
@@ -93,10 +121,22 @@ def search_jobs(conn, f: Filters, limit: int = 50, offset: int = 0, now: str | N
     return jobs, total
 
 
-def languages(conn, now: str | None = None) -> list[tuple[str, str, int]]:
-    rows = conn.execute("SELECT lang, COUNT(*) FROM jobs WHERE last_seen_at >= ? AND lang IS NOT NULL "
-                        "GROUP BY lang ORDER BY COUNT(*) DESC", (ago_iso(now or now_iso(), days=STALE_DAYS),))
-    return [(code, NAMES.get(code, code), n) for code, n in rows]
+def facets(conn, sector: str = "crypto", now: str | None = None) -> dict[str, list[tuple[str, str, int]]]:
+    base = ("FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.last_seen_at >= ?"
+            + (" AND c.sector = 'crypto'" if sector == "crypto" else ""))
+    cutoff = (ago_iso(now or now_iso(), days=STALE_DAYS),)
+
+    def count(col, names, order_by_name=False):
+        rows = conn.execute(f"SELECT {col}, COUNT(*) {base} AND {col} IS NOT NULL GROUP BY 1 ORDER BY 2 DESC", cutoff)
+        out = [(k, names.get(k, k), n) for k, n in rows]
+        return sorted(out, key=lambda r: list(names).index(r[0]) if r[0] in names else 99) if order_by_name else out
+
+    countries = conn.execute(f"SELECT value, COUNT(*) FROM jobs j JOIN companies c ON c.id = j.company_id, "
+                             f"json_each(j.countries) {base[base.index('WHERE'):]} GROUP BY 1 ORDER BY 2 DESC "
+                             f"LIMIT 40", cutoff)
+    return {"lang": count("j.lang", NAMES), "role": count("j.role", ROLES, True),
+            "seniority": count("j.seniority", SENIORITY, True),
+            "country": sorted(((k, COUNTRIES[k][0], n) for k, n in countries if k in COUNTRIES), key=lambda r: r[1])}
 
 
 def job_detail(conn, job_id: int):
@@ -112,7 +152,7 @@ def job_detail(conn, job_id: int):
 def companies(conn, q: str = "", now: str | None = None) -> list[dict]:
     cutoff = ago_iso(now or now_iso(), days=STALE_DAYS)
     rows = conn.execute(
-        "SELECT c.id, c.name, c.website, "
+        "SELECT c.id, c.name, c.website, c.sector, c.sector_source, "
         "(SELECT COUNT(*) FROM jobs j WHERE j.company_id = c.id AND j.last_seen_at >= ?) AS active, "
         "(SELECT group_concat(b.ats || ':' || b.slug, '  ') FROM boards b WHERE b.company_id = c.id) AS boards "
         "FROM companies c WHERE c.name LIKE ? ORDER BY active DESC, c.name COLLATE NOCASE LIMIT 1000",

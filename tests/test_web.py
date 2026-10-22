@@ -1,13 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from jobradar.classify import company_sectors
 from jobradar.db import connect
 from jobradar.ingest import ingest
 from jobradar.models import Posting
 from jobradar.normalize import now_iso
 from jobradar.web.app import create_app
 
-JD = " ".join(f"latency{i}" for i in range(120))
+JD = "blockchain " + " ".join(f"latency{i}" for i in range(120))
 
 
 @pytest.fixture
@@ -24,11 +25,14 @@ def client(tmp_path):
         Posting(source="cryptojobslist", source_job_id="c1", company="Beta", title="Head of Growth",
                 locations=["London"], description="growth marketing lead for a defi wallet", posted_at=now),
         Posting(source="ats:workday:acme", source_job_id="w1", company="Gamma", title="Undated Role"),
+        Posting(source="linkedin", source_job_id="l1", company="Delta Bank", title="Senior Data Analyst",
+                locations=["Remote - USA"], remote=True, salary="USD 100k", posted_at=now),
         Posting(source="habr", source_job_id="h1", company="Bitbanker", title="Разработчик блокчейн", posted_at=now,
                 description="Ищем опытного разработчика в команду криптобиржи, удалённая работа, полный день"),
     ])
+    company_sectors(conn)
     conn.close()
-    return TestClient(create_app(db))
+    return TestClient(create_app(db, sectors_csv=tmp_path / "company_sectors.csv"))
 
 
 def test_jobs_page_lists_deduped_jobs(client):
@@ -40,7 +44,7 @@ def test_jobs_page_lists_deduped_jobs(client):
 
 def test_undated_jobs_only_show_without_a_posted_filter(client):
     assert "Undated Role" not in client.get("/").text
-    r = client.get("/", params={"posted": "all"})
+    r = client.get("/", params={"posted": "all", "sector": "all"})
     assert "Undated Role" in r.text and "date unknown" in r.text
 
 
@@ -75,3 +79,35 @@ def test_companies_and_sources_pages(client):
     assert "Acme" in client.get("/companies").text
     r = client.get("/sources")
     assert r.status_code == 200 and "jobstash" in r.text and "Run now" in r.text
+
+
+def test_crypto_companies_by_default(client):
+    assert "Senior Data Analyst" not in client.get("/").text
+    assert "Senior Data Analyst" in client.get("/", params={"sector": "all"}).text
+
+
+def test_role_seniority_country_remote_salary_exclude(client):
+    def titles(**params):
+        text = client.get("/", params={"sector": "all", **params}).text
+        return {t for t in ("Rust Engineer", "Head of Growth", "Senior Data Analyst") if t in text}
+
+    assert titles(role="data") == {"Senior Data Analyst"}
+    assert titles(seniority="head") == {"Head of Growth"}
+    assert titles(country="SG") == {"Rust Engineer"}
+    assert titles(remote="1") == {"Senior Data Analyst"}
+    assert titles(remote="anywhere") == set()
+    assert titles(salary="1") == {"Senior Data Analyst"}
+    assert titles(exclude="growth") == {"Rust Engineer", "Senior Data Analyst"}
+
+
+def test_sector_override_from_companies_page(client, tmp_path):
+    page = client.get("/companies").text
+    assert "Delta Bank" in page and "Not crypto" in page
+    delta = client.get("/", params={"sector": "all", "role": "data"}).text
+    job_id = delta.split('hx-get="/jobs/')[1].split('"')[0]
+    company_id = client.get(f"/jobs/{job_id}").text.split("/?company=")[1].split("&")[0].split('"')[0]
+    r = client.post(f"/companies/{company_id}/sector/crypto")
+    assert r.status_code == 200 and "Crypto" in r.text
+    assert "Senior Data Analyst" in client.get("/").text
+    assert "Delta Bank,crypto,ui" in (tmp_path / "company_sectors.csv").read_text()
+    assert client.post(f"/companies/{company_id}/sector/maybe").status_code == 400

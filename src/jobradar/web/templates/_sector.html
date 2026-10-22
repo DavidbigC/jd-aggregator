@@ -1,0 +1,4 @@
+<td id="sector-{{ c.id }}" class="sector">
+  <span class="tag{{ ' muted-tag' if c.sector != 'crypto' }}" title="Rule: {{ c.sector_source or '—' }}">{{ 'Crypto' if c.sector == 'crypto' else 'Other' }}</span>
+  <button class="ghost tiny" hx-post="/companies/{{ c.id }}/sector/{{ 'other' if c.sector == 'crypto' else 'crypto' }}" hx-target="#sector-{{ c.id }}" hx-swap="outerHTML">{{ 'Not crypto' if c.sector == 'crypto' else 'Crypto' }}</button>
+</td>

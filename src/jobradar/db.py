@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS companies (
   key TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   website TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  sector TEXT,
+  sector_source TEXT
 );
 CREATE TABLE IF NOT EXISTS boards (
   id INTEGER PRIMARY KEY,
@@ -39,11 +41,18 @@ CREATE TABLE IF NOT EXISTS jobs (
   last_seen_at TEXT NOT NULL,
   lang TEXT,
   enriched_at TEXT,
-  enrich_status TEXT
+  enrich_status TEXT,
+  role TEXT,
+  seniority TEXT,
+  countries TEXT NOT NULL DEFAULT '[]',
+  remote_scope TEXT
 );
 CREATE INDEX IF NOT EXISTS jobs_company_title ON jobs (company_id, title_key);
 CREATE INDEX IF NOT EXISTS jobs_last_seen ON jobs (last_seen_at);
 CREATE INDEX IF NOT EXISTS jobs_lang ON jobs (lang);
+CREATE INDEX IF NOT EXISTS jobs_role ON jobs (role);
+CREATE INDEX IF NOT EXISTS jobs_seniority ON jobs (seniority);
+CREATE INDEX IF NOT EXISTS companies_sector ON companies (sector);
 CREATE TABLE IF NOT EXISTS sightings (
   id INTEGER PRIMARY KEY,
   job_id INTEGER NOT NULL REFERENCES jobs(id),
@@ -89,6 +98,12 @@ ADDED_COLUMNS = [
     ("jobs", "enriched_at", "TEXT"),
     ("jobs", "enrich_status", "TEXT"),
     ("sightings", "detail_url", "TEXT"),
+    ("companies", "sector", "TEXT"),
+    ("companies", "sector_source", "TEXT"),
+    ("jobs", "role", "TEXT"),
+    ("jobs", "seniority", "TEXT"),
+    ("jobs", "countries", "TEXT NOT NULL DEFAULT '[]'"),
+    ("jobs", "remote_scope", "TEXT"),
 ]
 
 

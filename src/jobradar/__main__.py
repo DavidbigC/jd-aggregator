@@ -1,9 +1,10 @@
 import argparse
 
-from .config import DB_PATH, SEED_CSV
+from .classify import company_sectors, reclassify_jobs
+from .config import DB_PATH, SECTORS_CSV, SEED_CSV
 from .db import connect
 from .lang import detect_lang
-from .registry import load_seed
+from .registry import load_sectors, load_seed
 from .runner import poll
 
 
@@ -15,12 +16,13 @@ def main() -> None:
     p.add_argument("--source", action="append", help="limit to this source (repeatable)")
     p.add_argument("--force", action="store_true", help="ignore intervals")
     sub.add_parser("relang", help="detect the language of every job")
+    sub.add_parser("reclassify", help="recompute job roles, seniority, countries and company sectors")
     s = sub.add_parser("serve", help="start the web UI")
     s.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
     conn = connect(DB_PATH)
     if args.cmd == "seed":
-        print(f"boards added: {load_seed(conn, SEED_CSV)}")
+        print(f"boards added: {load_seed(conn, SEED_CSV)}, sector overrides: {load_sectors(conn, SECTORS_CSV)}")
     elif args.cmd == "poll":
         poll(conn, sources=args.source, force=args.force)
     elif args.cmd == "relang":
@@ -29,6 +31,9 @@ def main() -> None:
                          [(detect_lang(r["title"], r["description"]), r["id"]) for r in rows])
         conn.commit()
         print(f"languages set for {len(rows)} jobs")
+    elif args.cmd == "reclassify":
+        load_sectors(conn, SECTORS_CSV)
+        print(f"jobs classified: {reclassify_jobs(conn)}, companies: {company_sectors(conn)}")
     else:
         import uvicorn
 

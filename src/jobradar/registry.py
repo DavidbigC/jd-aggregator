@@ -22,6 +22,30 @@ def load_seed(conn, path) -> int:
     return added
 
 
+def load_sectors(conn, path) -> int:
+    if not path.exists():
+        return 0
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    for r in rows:
+        cid = resolve_company(conn, r["company"])
+        conn.execute("UPDATE companies SET sector = ?, sector_source = 'override' WHERE id = ?", (r["sector"], cid))
+    conn.commit()
+    return len(rows)
+
+
+def save_sector(conn, path, company_id: int, sector: str, note: str = "") -> None:
+    name = conn.execute("SELECT name FROM companies WHERE id = ?", (company_id,)).fetchone()["name"]
+    conn.execute("UPDATE companies SET sector = ?, sector_source = 'override' WHERE id = ?", (sector, company_id))
+    conn.commit()
+    new = not path.exists()
+    with open(path, "a", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(["company", "sector", "note"])
+        w.writerow([name, sector, note])
+
+
 def discover_boards(conn, postings: list[Posting]) -> int:
     added = 0
     for p in postings:

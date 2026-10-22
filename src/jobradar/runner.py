@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from itertools import chain
 
 from . import enrich
+from .classify import company_sectors
 from .collectors import AGGREGATORS, sites
 from .collectors.ats import ADAPTERS
 from .config import DATA_DIR, INTERVALS
@@ -123,6 +124,8 @@ def poll(conn, sources: list[str] | None = None, force: bool = False, http=None,
                     log(f"{name:20s} {r['status']:5s} fetched={r['fetched']:<6} new={r['new_jobs']:<5} "
                         f"{r['error'] or ''}")
                     results.append((name, r))
+            if results:
+                company_sectors(conn)
         finally:
             if own_http:
                 http.close()

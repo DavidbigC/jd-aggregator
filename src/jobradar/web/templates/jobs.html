@@ -2,32 +2,54 @@
 {% block main %}
 <div class="jobs-layout">
   <form id="filters" class="filters" hx-get="/" hx-target="#results" hx-push-url="true"
-        hx-trigger="change, input changed delay:300ms from:#q, submit">
+        hx-trigger="change, input changed delay:300ms from:#q, input changed delay:300ms from:#exclude, submit">
     <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Search title, company, description" autofocus>
+    <fieldset class="seg"><legend>Companies</legend>
+      {% for k, label in [('crypto', 'Crypto companies'), ('all', 'All companies')] %}
+      <label class="pill"><input type="radio" name="sector" value="{{ k }}" {{ 'checked' if f.sector == k }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </fieldset>
     <fieldset><legend>Posted</legend>
       {% for k, label in [('24h', '24h'), ('3d', '3 days'), ('7d', '7 days'), ('30d', '30 days'), ('all', 'Any time')] %}
       <label class="pill"><input type="radio" name="posted" value="{{ k }}" {{ 'checked' if f.posted == k }}><span>{{ label }}</span></label>
       {% endfor %}
     </fieldset>
-    <fieldset><legend>Region</legend>
+    {% for name, legend in [('role', 'Role'), ('seniority', 'Seniority')] %}
+    <fieldset><legend>{{ legend }}</legend>
+      {% for code, label, n in facets[name] %}
+      <label class="pill"><input type="checkbox" name="{{ name }}" value="{{ code }}" {{ 'checked' if code in f[name] }}><span>{{ label }} <small class="n">{{ n }}</small></span></label>
+      {% endfor %}
+    </fieldset>
+    {% endfor %}
+    <fieldset><legend>Where</legend>
       {% for k in ['', 'APAC', 'EMEA', 'Americas'] %}
       <label class="pill"><input type="radio" name="region" value="{{ k }}" {{ 'checked' if f.region == k }}><span>{{ k or 'Any' }}</span></label>
       {% endfor %}
-      <label class="check"><input type="checkbox" name="remote" value="1" {{ 'checked' if f.remote }}> Remote only</label>
-    </fieldset>
-    {% if langs %}
-    <fieldset class="langs"><legend>Language</legend>
-      {% for code, name, n in langs[:12] %}
-      <label class="pill"><input type="checkbox" name="lang" value="{{ code }}" {{ 'checked' if code in f.lang }}><span>{{ name }} <small class="n">{{ n }}</small></span></label>
+      <select name="country">
+        <option value="">Any country</option>
+        {% for code, label, n in facets.country %}<option value="{{ code }}" {{ 'selected' if f.country == code }}>{{ label }} ({{ n }})</option>{% endfor %}
+      </select>
+      {% for k, label in [('', 'On-site or remote'), ('1', 'Remote'), ('anywhere', 'Remote anywhere')] %}
+      <label class="pill"><input type="radio" name="remote" value="{{ k }}" {{ 'checked' if f.remote == k }}><span>{{ label }}</span></label>
       {% endfor %}
     </fieldset>
-    {% endif %}
-    <fieldset><legend>Source</legend>
-      <select name="source">
-        <option value="">All sources</option>
-        {% for k, label in source_groups %}<option value="{{ k }}" {{ 'selected' if f.source == k }}>{{ label }}</option>{% endfor %}
-      </select>
-    </fieldset>
+    <details class="more" {{ 'open' if f.more_set }}><summary>More filters</summary>
+      <label class="check"><input type="checkbox" name="salary" value="1" {{ 'checked' if f.salary }}> Salary shown</label>
+      <input id="exclude" name="exclude" type="search" value="{{ f.exclude }}" placeholder="Exclude words, e.g. intern sales">
+      {% if facets.lang %}
+      <fieldset class="langs"><legend>Language</legend>
+        {% for code, name, n in facets.lang[:12] %}
+        <label class="pill"><input type="checkbox" name="lang" value="{{ code }}" {{ 'checked' if code in f.lang }}><span>{{ name }} <small class="n">{{ n }}</small></span></label>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
+      <fieldset><legend>Source</legend>
+        <select name="source">
+          <option value="">All sources</option>
+          {% for k, label in source_groups %}<option value="{{ k }}" {{ 'selected' if f.source == k }}>{{ label }}</option>{% endfor %}
+        </select>
+      </fieldset>
+    </details>
     <fieldset><legend>Sort</legend>
       <select name="sort">
         <option value="posted" {{ 'selected' if f.sort == 'posted' }}>Newest posted</option>

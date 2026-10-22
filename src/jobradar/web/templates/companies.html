@@ -6,10 +6,11 @@
   <form class="search" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Filter companies"></form>
 </div>
 <div class="panel"><table>
-  <tr><th>Company</th><th class="num">Active jobs</th><th>Hiring boards polled</th><th>Website</th></tr>
+  <tr><th>Company</th><th>Sector</th><th class="num">Active jobs</th><th>Hiring boards polled</th><th>Website</th></tr>
   {% for c in rows %}
   <tr>
-    <td><a href="/?company={{ c.id }}&posted=all">{{ c.name }}</a></td>
+    <td><a href="/?company={{ c.id }}&posted=all&sector=all">{{ c.name }}</a></td>
+    {% include "_sector.html" %}
     <td class="num">{{ c.active }}</td>
     <td class="muted">{{ c.boards or '—' }}</td>
     <td>{% if c.website %}<a href="{{ c.website }}" target="_blank" rel="noopener">{{ c.website | replace('https://', '') | replace('http://', '') }}</a>{% endif %}</td>

@@ -56,6 +56,9 @@ SITES = {
                       company="未具名 (Foresight)"),
     "learnblockchain": Site(["https://learnblockchain.cn/jobs"], r"/job/(\d+)", "https://learnblockchain.cn/job/{}",
                             company="未具名 (登链社区)"),
+    "bitflyer": Site(["https://about.bitflyer.com/en/recruit", "https://about.bitflyer.com/ja/recruit"],
+                     r"recruit\.jobcan\.jp/bitflyer/job_offers/(\d+)", "https://recruit.jobcan.jp/bitflyer/job_offers/{}",
+                     company="bitFlyer"),
 }
 
 
