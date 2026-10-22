@@ -71,6 +71,12 @@ python -m jobradar seed | poll [--source NAME] [--force] | relang | serve [--por
 - eleduck can legitimately return 0: it is a general remote-work feed filtered to web3 keywords.
 - UI opens on "posted in last 7 days"; pick "any time" to see everything.
 
+## Operating notes (v2 backfill, 2026-10-22)
+- The date fix took the 7-day view from 2,050 jobs to 881. After the new sources landed it shows 1,582.
+- The enrich backlog (~2,700 jobs) cleared in 7 runs. A 400-job run took 27 min with the old fixed 4 s browser wait, then 5–14 min after the wait was cut to 1.5 s.
+- Afterwards, of 12,078 active jobs: 96.8% have a full description, 99.5% are dated, and none are still waiting for a first enrich attempt. Of the attempts, 2,508 were ok, 140 returned some other page, 44 errored (mostly 404s on dead job links) and 4 were too short to use.
+- LinkedIn's guest API starts rate-limiting after about 12 quick calls, which is why it has a 6 s host interval.
+
 ## Adding a source
 - **A site whose job pages carry JSON-LD:** add a `Site` entry in collectors/sites.py (listing URLs, job-link regex, detail URL format, `browser=True` if it blocks httpx, `crypto_only=True` if its search is fuzzy) and an interval in config.INTERVALS.
 - **An API or feed:** write `collect(http) -> list[Posting]`, register it in collectors/__init__.py and config.INTERVALS, record a fixture (`scripts/record_fixtures.py NAME`) and add a test.
