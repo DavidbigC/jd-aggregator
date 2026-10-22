@@ -1,7 +1,8 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..config import INTERVALS, STALE_DAYS
+from ..lang import NAMES
 from ..normalize import ago_iso, now_iso
 
 SOURCE_GROUPS = [
@@ -9,6 +10,13 @@ SOURCE_GROUPS = [
     ("consider", "VC boards · Consider"), ("web3career", "web3.career"), ("cryptojobslist", "cryptojobslist"),
     ("cryptocurrencyjobs", "cryptocurrencyjobs.co"), ("web3vacancy", "web3vacancy"), ("cryptojobs", "crypto.jobs"),
     ("telegram", "Telegram"), ("rebase", "Rebase 中文"), ("eleduck", "电鸭"), ("mycareersfuture", "MyCareersFuture SG"),
+    ("linkedin", "LinkedIn"), ("seek", "JobsDB / JobStreet"), ("remote3", "remote3"), ("remoteok", "Remote OK"),
+    ("remotive", "Remotive"), ("himalayas", "Himalayas"), ("foresight", "Foresight News 中文"),
+    ("learnblockchain", "登链社区"), ("104", "104 人力銀行 (TW)"), ("wanted", "Wanted (KR)"),
+    ("rocketpunch", "Rocketpunch (KR)"), ("green", "Green (JP)"), ("habr", "Habr Career (RU)"), ("hh", "hh.ru (RU)"),
+    ("djinni", "Djinni (UA)"), ("dou", "DOU (UA)"), ("justjoin", "Just Join IT (PL)"), ("nofluff", "No Fluff Jobs (PL)"),
+    ("arbeitnow", "Arbeitnow (DE)"), ("berlinstartupjobs", "Berlin Startup Jobs"), ("cutshort", "Cutshort (IN)"),
+    ("itviec", "ITviec (VN)"),
     ("board-only", "Not on any company ATS"),
 ]
 POSTED_DAYS = {"24h": 1, "3d": 3, "7d": 7, "30d": 30, "all": None}
@@ -29,6 +37,7 @@ class Filters:
     company: int | None = None
     stale: bool = False
     sort: str = "posted"
+    lang: list[str] = field(default_factory=list)
 
 
 def _where(f: Filters, now: str):
@@ -46,6 +55,9 @@ def _where(f: Filters, now: str):
     for t in (t for t in terms if len(t) < 3):
         where.append("(j.title LIKE ? OR c.name LIKE ?)")
         args += [f"%{t}%", f"%{t}%"]
+    if f.lang:
+        where.append(f"j.lang IN ({', '.join('?' * len(f.lang))})")
+        args += f.lang
     if f.region:
         where.append("j.regions LIKE ?")
         args.append(f'%"{f.region}"%')
@@ -68,7 +80,8 @@ def search_jobs(conn, f: Filters, limit: int = 50, offset: int = 0, now: str | N
     base = f"FROM jobs j JOIN companies c ON c.id = j.company_id {where}"
     total = conn.execute(f"SELECT COUNT(*) {base}", args).fetchone()[0]
     rows = conn.execute(
-        f"SELECT j.id, j.title, j.locations, j.remote, j.salary, j.posted_at, j.first_seen_at, c.name AS company, "
+        f"SELECT j.id, j.title, j.locations, j.remote, j.salary, j.posted_at, j.first_seen_at, j.lang, "
+        f"c.name AS company, "
         f"(SELECT COUNT(*) FROM sightings s WHERE s.job_id = j.id) AS n_sources, "
         f"(SELECT group_concat(DISTINCT s.kind) FROM sightings s WHERE s.job_id = j.id) AS kinds "
         f"{base} ORDER BY {ORDER.get(f.sort, ORDER['posted'])} LIMIT ? OFFSET ?",
@@ -78,6 +91,12 @@ def search_jobs(conn, f: Filters, limit: int = 50, offset: int = 0, now: str | N
     jobs = [{**dict(r), "locations": json.loads(r["locations"]), "kinds": sorted((r["kinds"] or "").split(",")),
              "is_new": r["first_seen_at"] >= day_ago} for r in rows]
     return jobs, total
+
+
+def languages(conn, now: str | None = None) -> list[tuple[str, str, int]]:
+    rows = conn.execute("SELECT lang, COUNT(*) FROM jobs WHERE last_seen_at >= ? AND lang IS NOT NULL "
+                        "GROUP BY lang ORDER BY COUNT(*) DESC", (ago_iso(now or now_iso(), days=STALE_DAYS),))
+    return [(code, NAMES.get(code, code), n) for code, n in rows]
 
 
 def job_detail(conn, job_id: int):

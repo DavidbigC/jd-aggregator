@@ -3,7 +3,8 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from itertools import chain
 
-from .collectors import AGGREGATORS
+from . import enrich
+from .collectors import AGGREGATORS, sites
 from .collectors.ats import ADAPTERS
 from .config import DATA_DIR, INTERVALS
 from .http import Http
@@ -11,7 +12,7 @@ from .ingest import ingest
 from .normalize import ago_iso, is_web3, now_iso
 from .registry import discover_boards
 
-SOURCES = ["ats", *AGGREGATORS]
+SOURCES = ["ats", *AGGREGATORS, *sites.SITES, "enrich"]
 ATS_WORKERS = 8
 
 
@@ -25,6 +26,14 @@ def due_sources(conn, now: str, force: bool = False, only: list[str] | None = No
         if not last or last <= ago_iso(now, minutes=INTERVALS.get(name, 60)):
             due.append(name)
     return due
+
+
+def _fetcher(conn, name: str):
+    if name in sites.SITES:
+        seen = {r[0] for r in conn.execute("SELECT source_job_id FROM sightings WHERE source = ?", (name,))}
+        skipped = {r[0] for r in conn.execute("SELECT source_job_id FROM skipped WHERE source = ?", (name,))}
+        return lambda http: sites.collect(http, name, seen, skipped)
+    return AGGREGATORS[name]
 
 
 def _fetch_board(http, b) -> tuple[list, str]:
@@ -64,8 +73,13 @@ def run_source(conn, http, name: str, now: str | None = None, fetched: Future | 
     try:
         if name == "ats":
             stats = _run_ats(conn, http, now)
+        elif name == "enrich":
+            stats = enrich.run(conn, http, now)
         else:
-            postings = fetched.result() if fetched else AGGREGATORS[name](http)
+            got = fetched.result() if fetched else _fetcher(conn, name)(http)
+            postings, skipped = got if isinstance(got, tuple) else (got, [])
+            conn.executemany("INSERT OR IGNORE INTO skipped (source, source_job_id, at) VALUES (?, ?, ?)",
+                             [(name, s, now) for s in skipped])
             stats = ingest(conn, postings, now, trust_new=polled_before)
             discover_boards(conn, postings)
         result = {"status": "ok", "fetched": stats["fetched"], "new_jobs": stats["new_jobs"], "error": None}
@@ -95,14 +109,21 @@ def poll(conn, sources: list[str] | None = None, force: bool = False, http=None,
         if not acquired:
             log("another poll is running; skipping")
             return []
-        http = http or Http()
+        own_http, http = http is None, http or Http()
         due = due_sources(conn, now_iso(), force=force, only=sources)
+        fetched = [n for n in due if n not in ("ats", "enrich")]
         results = []
-        with ThreadPoolExecutor(len(AGGREGATORS)) as pool:
-            fetches = {pool.submit(AGGREGATORS[n], http): n for n in due if n != "ats"}
-            for fut in chain([None] * ("ats" in due), as_completed(fetches)):
-                name = fetches[fut] if fut else "ats"
-                r = run_source(conn, http, name, fetched=fut)
-                log(f"{name:20s} {r['status']:5s} fetched={r['fetched']:<6} new={r['new_jobs']:<5} {r['error'] or ''}")
-                results.append((name, r))
+        try:
+            with ThreadPoolExecutor(max(1, len(fetched))) as pool:
+                fetches = {pool.submit(_fetcher(conn, n), http): n for n in fetched}
+                steps = chain([("ats", None)] * ("ats" in due), ((fetches[f], f) for f in as_completed(fetches)),
+                              [("enrich", None)] * ("enrich" in due))
+                for name, fut in steps:
+                    r = run_source(conn, http, name, fetched=fut)
+                    log(f"{name:20s} {r['status']:5s} fetched={r['fetched']:<6} new={r['new_jobs']:<5} "
+                        f"{r['error'] or ''}")
+                    results.append((name, r))
+        finally:
+            if own_http:
+                http.close()
         return results

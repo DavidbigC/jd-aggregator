@@ -1,4 +1,4 @@
-from . import consider, feeds, getro, jobstash, mycareersfuture, rebase, telegram, web3career
+from . import boards, consider, feeds, getro, jobstash, linkedin, mycareersfuture, rebase, seek, telegram, web3career
 
 AGGREGATORS = {
     "jobstash": jobstash.collect,
@@ -13,4 +13,13 @@ AGGREGATORS = {
     "rebase": rebase.collect,
     "telegram": telegram.collect,
     "mycareersfuture": mycareersfuture.collect,
+    "seek": seek.collect,
+    "linkedin": linkedin.collect,
+    "remoteok": boards.remoteok,
+    "remotive": boards.remotive,
+    "himalayas": boards.himalayas,
+    "wanted": boards.wanted,
+    "104": boards.tw104,
+    "arbeitnow": boards.arbeitnow,
+    "berlinstartupjobs": boards.berlinstartupjobs,
 }

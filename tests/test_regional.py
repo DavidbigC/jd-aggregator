@@ -1,5 +1,6 @@
-from jobradar.collectors import AGGREGATORS, mycareersfuture, rebase, telegram
+from jobradar.collectors import mycareersfuture, rebase, telegram
 from jobradar.config import INTERVALS
+from jobradar.runner import SOURCES
 
 DEJOB_EN = """#Recruitment
 🏡  Temporal     #Research
@@ -64,5 +65,5 @@ def test_mycareersfuture(http):
     assert ps and all(p.locations == ["Singapore"] and p.company != "Unknown" for p in ps)
 
 
-def test_every_aggregator_has_an_interval():
-    assert set(AGGREGATORS) | {"ats"} == set(INTERVALS)
+def test_every_source_has_an_interval():
+    assert set(SOURCES) == set(INTERVALS)

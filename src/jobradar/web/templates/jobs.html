@@ -15,6 +15,13 @@
       {% endfor %}
       <label class="check"><input type="checkbox" name="remote" value="1" {{ 'checked' if f.remote }}> Remote only</label>
     </fieldset>
+    {% if langs %}
+    <fieldset class="langs"><legend>Language</legend>
+      {% for code, name, n in langs[:12] %}
+      <label class="pill"><input type="checkbox" name="lang" value="{{ code }}" {{ 'checked' if code in f.lang }}><span>{{ name }} <small class="n">{{ n }}</small></span></label>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
     <fieldset><legend>Source</legend>
       <select name="source">
         <option value="">All sources</option>

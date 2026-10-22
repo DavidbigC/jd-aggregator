@@ -1,6 +1,7 @@
 import json
 
 from .config import MATCH_WINDOW_DAYS, SIMILARITY_THRESHOLD
+from .lang import detect_lang
 from .models import Posting
 from .normalize import (ago_iso, ats_key_from_url, company_key, is_remote, now_iso, regions_for, shingles,
                         similarity, title_key, url_key)
@@ -31,8 +32,9 @@ def _ingest_one(conn, p: Posting, now: str, trust_new: bool) -> bool:
     seen = conn.execute("SELECT id, job_id FROM sightings WHERE source = ? AND source_job_id = ?",
                         (p.source, p.source_job_id)).fetchone()
     if seen:
-        conn.execute("UPDATE sightings SET last_seen_at = ?, url = ?, url_key = ?, ats_key = COALESCE(?, ats_key) "
-                     "WHERE id = ?", (now, p.url, ukey, akey, seen["id"]))
+        conn.execute("UPDATE sightings SET last_seen_at = ?, url = COALESCE(?, url), url_key = COALESCE(?, url_key), "
+                     "ats_key = COALESCE(?, ats_key), detail_url = COALESCE(?, detail_url) WHERE id = ?",
+                     (now, p.url, ukey, akey, p.detail_url, seen["id"]))
         _merge(conn, seen["job_id"], p, now)
         return False
     company_id = resolve_company(conn, p.company, p.company_website, now)
@@ -44,9 +46,9 @@ def _ingest_one(conn, p: Posting, now: str, trust_new: bool) -> bool:
     else:
         _merge(conn, job_id, p, now)
     conn.execute(
-        "INSERT INTO sightings (job_id, source, kind, source_job_id, ats_key, url, url_key, location, match, "
-        "first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (job_id, p.source, p.source.split(":")[0], p.source_job_id, akey, p.url, ukey,
+        "INSERT INTO sightings (job_id, source, kind, source_job_id, ats_key, url, url_key, detail_url, location, "
+        "match, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (job_id, p.source, p.source.split(":")[0], p.source_job_id, akey, p.url, ukey, p.detail_url,
          "; ".join(x for x in p.locations if x) or None, match, now, now),
     )
     return created
@@ -83,10 +85,11 @@ def _create(conn, company_id, tkey, p, now, posted_at) -> int:
     locs = _uniq(p.locations)
     cur = conn.execute(
         "INSERT INTO jobs (company_id, title, title_key, description, desc_from_ats, locations, regions, remote, "
-        "salary, apply_url, posted_at, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "salary, apply_url, posted_at, first_seen_at, last_seen_at, lang) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (company_id, p.title.strip(), tkey, p.description, int(p.from_ats and bool(p.description)),
          json.dumps(locs, ensure_ascii=False), json.dumps(regions_for(locs)), int(bool(p.remote) or is_remote(locs)),
-         p.salary, p.url, posted_at, now, now),
+         p.salary, p.url, posted_at, now, now, detect_lang(p.title, p.description)),
     )
     _index(conn, cur.lastrowid)
     return cur.lastrowid
@@ -108,7 +111,26 @@ def _merge(conn, job_id, p, now) -> None:
          int(bool(j["remote"]) or bool(p.remote) or is_remote(locs)), p.salary, apply_url, posted, now, job_id),
     )
     if upgrade:
+        conn.execute("UPDATE jobs SET lang = ? WHERE id = ?", (detect_lang(j["title"], desc), job_id))
         _index(conn, job_id)
+
+
+def apply_detail(conn, job_id: int, d, now: str, status: str) -> bool:
+    j = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    better = bool(d and d.description) and len(d.description) > len(j["description"] or "")
+    if d:
+        locs = _uniq(json.loads(j["locations"]) + d.locations)
+        conn.execute(
+            "UPDATE jobs SET description = ?, locations = ?, regions = ?, remote = ?, salary = COALESCE(salary, ?), "
+            "posted_at = COALESCE(posted_at, ?), lang = ? WHERE id = ?",
+            (d.description if better else j["description"], json.dumps(locs, ensure_ascii=False),
+             json.dumps(regions_for(locs)), int(bool(j["remote"]) or bool(d.remote) or is_remote(locs)), d.salary,
+             d.posted_at, detect_lang(j["title"], d.description if better else j["description"]), job_id),
+        )
+    conn.execute("UPDATE jobs SET enriched_at = ?, enrich_status = ? WHERE id = ?", (now, status, job_id))
+    if better:
+        _index(conn, job_id)
+    return better or bool(d and d.posted_at and not j["posted_at"])
 
 
 def _index(conn, job_id: int) -> None:

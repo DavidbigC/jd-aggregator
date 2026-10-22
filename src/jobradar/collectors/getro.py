@@ -42,9 +42,10 @@ def collect_network(http, name: str) -> list[Posting]:
                         headers=headers).json()["results"]
         for j in res["jobs"]:
             org = j.get("organization") or {}
+            page_url = f"https://{host}/companies/{org.get('slug')}/jobs/{j.get('slug')}"
             out.append(Posting(
                 source=f"getro:{name}", source_job_id=str(j["id"]), company=org.get("name") or "Unknown",
-                title=j["title"], url=j.get("url") or f"https://{host}/companies/{org.get('slug')}/jobs/{j.get('slug')}",
+                title=j["title"], url=j.get("url") or page_url, detail_url=page_url,
                 locations=j.get("locations") or [], remote=(j.get("work_mode") == "remote") or None,
                 posted_at=to_iso(j.get("created_at")),
                 salary=salary_text(_dollars(j.get("compensation_amount_min_cents")),

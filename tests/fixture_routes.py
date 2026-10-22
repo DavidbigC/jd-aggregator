@@ -29,6 +29,17 @@ ROUTES = [
     ("telegram_web3hiring.html", "GET", "https://t.me/s/web3hiring"),
     ("mycareersfuture_blockchain.json", "GET",
      "https://api.mycareersfuture.gov.sg/v2/jobs?search=blockchain&limit=100&page=0"),
+    ("seek_jobsdb-hk.json", "GET",
+     "https://hk.jobsdb.com/api/jobsearch/v5/search?siteKey=HK-Main&keywords=blockchain&page=1&pageSize=100"),
+    ("linkedin_search.html", "GET", "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+     "?keywords=blockchain&location=Singapore&f_TPR=r604800&start=0"),
+    ("remoteok_crypto.json", "GET", "https://remoteok.com/api?tag=crypto"),
+    ("remotive_crypto.json", "GET", "https://remotive.com/api/remote-jobs?search=crypto"),
+    ("himalayas_crypto.json", "GET", "https://himalayas.app/jobs/api/search?q=crypto&page=1"),
+    ("wanted.json", "GET", "https://www.wanted.co.kr/api/chaos/search/v1/results?query=%EB%B8%94%EB%A1%9D%EC%B2%B4%EC%9D%B8&limit=100"),
+    ("104.json", "GET", "https://www.104.com.tw/jobs/search/api/jobs?keyword=%E5%8D%80%E5%A1%8A%E9%8F%88&page=1&pagesize=20"),
+    ("arbeitnow.json", "GET", "https://www.arbeitnow.com/api/job-board-api?page=1"),
+    ("berlinstartupjobs.xml", "GET", "https://berlinstartupjobs.com/feed/"),
 ]
 
 BODIES = {
@@ -36,6 +47,7 @@ BODIES = {
     "workday_bullish.json": {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""},
 }
 HEADERS = {
+    "104.json": {"Referer": "https://www.104.com.tw/jobs/search/"},
     "getro_dragonfly.json": {"accept": "application/json", "origin": "https://jobs.dragonfly.xyz",
                              "referer": "https://jobs.dragonfly.xyz/"},
 }

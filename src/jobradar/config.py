@@ -24,7 +24,33 @@ INTERVALS = {
     "rebase": 60,
     "telegram": 60,
     "mycareersfuture": 360,
+    "seek": 180,
+    "linkedin": 360,
+    "remoteok": 120,
+    "remotive": 180,
+    "himalayas": 180,
+    "wanted": 360,
+    "104": 360,
+    "arbeitnow": 360,
+    "berlinstartupjobs": 360,
+    "habr": 360,
+    "hh": 360,
+    "dou": 360,
+    "djinni": 180,
+    "justjoin": 360,
+    "nofluff": 360,
+    "green": 720,
+    "rocketpunch": 720,
+    "cutshort": 360,
+    "itviec": 720,
+    "remote3": 180,
+    "foresight": 180,
+    "learnblockchain": 360,
+    "enrich": 30,
 }
+HOST_INTERVALS = {"www.linkedin.com": 6.0}
+ENRICH_BATCH = 400
+ENRICH_RETRY_DAYS = 7
 
 SUPPORTED_ATS = {"greenhouse", "lever", "lever-eu", "ashby", "workable", "recruitee", "smartrecruiters", "bamboohr",
                  "breezy", "teamtailor", "personio", "rippling", "gem", "workday"}

@@ -3,7 +3,7 @@
     hx-on:click="document.querySelectorAll('.job.sel').forEach(e => e.classList.remove('sel')); this.classList.add('sel')">
   <div class="job-main">
     <div class="job-title">{% if j.is_new %}<span class="dot" aria-label="new"></span>{% endif %}{{ j.title }}</div>
-    <div class="job-sub">{{ j.company }}{% if j.locations %} · {{ j.locations | join(' / ') | truncate(80) }}{% endif %}{% if j.remote %} · <span class="tag">Remote</span>{% endif %}</div>
+    <div class="job-sub">{{ j.company }}{% if j.locations %} · {{ j.locations | join(' / ') | truncate(80) }}{% endif %}{% if j.remote %} · <span class="tag">Remote</span>{% endif %}{% if j.lang and j.lang != 'en' %} · <span class="tag lang">{{ lang_names.get(j.lang, j.lang) }}</span>{% endif %}</div>
   </div>
   <div class="job-meta">
     {% if j.salary %}<div class="salary">{{ j.salary }}</div>{% endif %}

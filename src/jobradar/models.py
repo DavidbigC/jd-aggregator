@@ -16,3 +16,4 @@ class Posting:
     salary: str | None = None
     company_website: str | None = None
     from_ats: bool = False
+    detail_url: str | None = None

@@ -24,6 +24,8 @@ def client(tmp_path):
         Posting(source="cryptojobslist", source_job_id="c1", company="Beta", title="Head of Growth",
                 locations=["London"], description="growth marketing lead for a defi wallet", posted_at=now),
         Posting(source="ats:workday:acme", source_job_id="w1", company="Gamma", title="Undated Role"),
+        Posting(source="habr", source_job_id="h1", company="Bitbanker", title="Разработчик блокчейн", posted_at=now,
+                description="Ищем опытного разработчика в команду криптобиржи, удалённая работа, полный день"),
     ])
     conn.close()
     return TestClient(create_app(db))
@@ -33,13 +35,22 @@ def test_jobs_page_lists_deduped_jobs(client):
     r = client.get("/")
     assert r.status_code == 200
     assert r.text.count("Rust Engineer") == 1 and "Head of Growth" in r.text
-    assert "2 jobs" in r.text.replace("<b>", "").replace("</b>", "")
+    assert "3 jobs" in r.text.replace("<b>", "").replace("</b>", "")
 
 
 def test_undated_jobs_only_show_without_a_posted_filter(client):
     assert "Undated Role" not in client.get("/").text
     r = client.get("/", params={"posted": "all"})
     assert "Undated Role" in r.text and "date unknown" in r.text
+
+
+def test_language_filter_and_tag(client):
+    page = client.get("/").text
+    assert "Русский" in page and 'class="tag lang"' in page
+    r = client.get("/", params=[("lang", "ru")]).text
+    assert "Разработчик блокчейн" in r and "Rust Engineer" not in r
+    r = client.get("/", params=[("lang", "ru"), ("lang", "en")]).text
+    assert "Разработчик блокчейн" in r and "Rust Engineer" in r
 
 
 def test_filters(client):

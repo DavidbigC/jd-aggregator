@@ -43,4 +43,4 @@ def conn(tmp_path):
 
 @pytest.fixture
 def http():
-    return Http(min_interval=0, transport=httpx.MockTransport(_router), retries=1)
+    return Http(min_interval=0, transport=httpx.MockTransport(_router), retries=1, host_intervals={})

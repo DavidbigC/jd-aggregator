@@ -24,7 +24,7 @@ def test_jobstash_keeps_only_crypto_orgs(http):
 def test_getro_network(http):
     ps = getro.collect_network(http, "dragonfly")
     _valid(ps, "getro:dragonfly")
-    assert len(ps) == 5
+    assert len(ps) == 5 and all(p.detail_url.startswith("https://jobs.dragonfly.xyz/companies/") for p in ps)
 
 
 def test_consider_board(http):
