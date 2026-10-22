@@ -10,7 +10,7 @@ class Browser:
         self._lane = ThreadPoolExecutor(1, thread_name_prefix="browser")
         self._browser = self._page = None
 
-    def html(self, url: str, wait_ms: int = 4000) -> str:
+    def html(self, url: str, wait_ms: int = 1500) -> str:
         return self._lane.submit(self._html, url, wait_ms).result()
 
     def _html(self, url: str, wait_ms: int) -> str:
@@ -20,7 +20,7 @@ class Browser:
             self._page = self._browser.new_page()
         self._page.goto(url, wait_until="domcontentloaded", timeout=45000)
         html = ""
-        for _ in range(4):
+        for _ in range(6):
             self._page.wait_for_timeout(wait_ms)
             try:
                 html = self._page.content()

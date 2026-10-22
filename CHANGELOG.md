@@ -18,3 +18,4 @@
 - 2026-10-22 feat: detect each job's language and filter by language in the UI
 - 2026-10-22 feat: add 22 job sources across Asia, Europe and Russia/Ukraine, plus LinkedIn and remote boards
 - 2026-10-22 fix: treat short ASCII-only job text as English instead of guessing a language
+- 2026-10-22 fix: cut the CloakBrowser per-page wait from 4s to 1.5s, waiting longer only on challenge pages
