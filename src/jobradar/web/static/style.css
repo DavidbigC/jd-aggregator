@@ -111,3 +111,32 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .sector { white-space: nowrap; }
 .tag.muted-tag { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
 button.tiny { margin-left: 6px; padding: 1px 8px; font-size: 11px; font-weight: 500; }
+
+.topbar nav .count { margin-left: 2px; padding: 0 6px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-size: 11px; font-weight: 600; }
+.sl-filters { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.sl-filters select { padding: 5px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); font: inherit; }
+.sl-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 16px; align-items: start; }
+.sl-group { margin-bottom: 16px; }
+.sl-group summary { cursor: pointer; list-style: none; }
+.sl-group summary h2 { display: inline; margin: 0; font-size: 14px; letter-spacing: .02em; }
+.sl-group .job-list { margin-top: 8px; }
+.sl-row { display: flex; gap: 16px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.sl-main { flex: 1; min-width: 0; }
+.sl-main .job-title { white-space: normal; }
+.sl-scores { display: flex; gap: 12px; margin: 4px 0; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sl-scores b { color: var(--ink); }
+.sl-why { margin: 4px 0; }
+.sl-risk, .sl-cv { margin: 4px 0; font-size: 12.5px; }
+.sl-side { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 8px; width: 190px; }
+.label-box { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.label-box .seg { justify-content: flex-end; }
+.label-box input[name=note] { width: 100%; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 12px; }
+.lbl-Y input:checked + span { background: var(--new); border-color: var(--new); }
+.lbl-M input:checked + span { background: var(--warn); border-color: var(--warn); }
+.lbl-N input:checked + span { background: var(--muted); border-color: var(--muted); }
+.lbl-clear span { color: var(--muted); }
+.label-box.labelled ~ .btn { opacity: .85; }
+.btn.small { padding: 4px 10px; font-size: 12.5px; }
+.empty { padding: 30px 0; text-align: center; }
+@media (max-width: 1200px) { .sl-layout { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .sl-row { flex-direction: column; } .sl-side { width: 100%; align-items: stretch; } }

@@ -1,0 +1,10 @@
+<form id="label-{{ e.job_id }}" class="label-box{{ ' labelled' if e.label }}" hx-post="/shortlist/{{ e.job_id }}/label"
+      hx-trigger="change, submit" hx-swap="outerHTML">
+  <fieldset class="seg">
+    {% for k, t in [('Y', 'Yes'), ('M', 'Maybe'), ('N', 'No')] %}
+    <label class="pill lbl-{{ k }}"><input type="radio" name="label" value="{{ k }}" {{ 'checked' if e.label == k }}><span>{{ t }}</span></label>
+    {% endfor %}
+    {% if e.label %}<label class="pill lbl-clear" title="Clear label"><input type="radio" name="label" value=""><span>×</span></label>{% endif %}
+  </fieldset>
+  <input name="note" value="{{ e.label_note or '' }}" placeholder="Why? (optional)" aria-label="Note">
+</form>

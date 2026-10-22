@@ -22,6 +22,18 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 - **skipped** — job links a site collector fetched and rejected as not crypto, so they are not fetched again.
 - **source_runs** — one row per source run: status, counts, error.
 - **jobs_fts** — FTS5 trigram index over title, company and description.
+- **match_evaluations** — job-fit scores, one row per job, shown on `/shortlist`. Each row has:
+  - `run`, `verdict` (apply_now / tailor_then_apply / stretch / skip) and `track`;
+  - scores `rec`, `hm` and `want`, plus `priority` = rec·hm·want/10000;
+  - `why`, `risk` and `start_cv`;
+  - David's `label` (Y/M/N), `label_note` and `labelled_at`.
+
+  An import updates the scores and never touches the label fields (docs/decisions/0004).
+
+## Shortlist (match.py, /shortlist)
+- **Where the scores come from:** `python -m jobradar match import FILE.json` loads evaluations. For now these are hand-scored runs from job_related/docs/runs/; later the LLM matcher writes through the same `import_results()`.
+- **The page:** jobs are grouped by verdict and sorted by priority, with "Unlabelled only" and verdict filters. Clicking a title opens the full ad in the detail pane.
+- **Labelling:** Y / M / N plus a note are saved through htmx (`POST /shortlist/{job_id}/label`). The nav tab shows how many jobs are still unlabelled.
 
 ## Dedup ladder (ingest.py)
 1. Same (source, source_job_id): a re-sighting of a known job.
@@ -61,14 +73,14 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
   - remote_scope: anywhere unless a country or region is named.
 
 ## Layout
-- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, `__main__`
+- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match, `__main__`
 - **src/jobradar/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
 - **src/jobradar/web/** — app.py, queries.py, templates/, static/
 - **seeds/boards.csv** — research seed of about 640 boards
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running
-python -m jobradar seed | poll [--source NAME] [--force] | relang | reclassify | serve [--port N]
+python -m jobradar seed | poll [--source NAME] [--force] | relang | reclassify | match import FILE [--run NAME] | serve [--port N]
 
 `seed` also loads seeds/company_sectors.csv. `reclassify` recomputes every job's fields and every company's sector.
 

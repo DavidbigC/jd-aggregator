@@ -23,3 +23,4 @@
 - 2026-10-22 feat: filter jobs by role, seniority, country, remote-anywhere, salary shown and excluded words
 - 2026-10-22 feat: collect bitFlyer careers and Nansen's Ashby board
 - 2026-10-22 fix: take getro company names from LinkedIn URLs when the network mislabels them
+- 2026-10-22 feat: add a Shortlist page to review matched jobs and label them Yes / Maybe / No

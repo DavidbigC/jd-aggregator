@@ -89,6 +89,23 @@ CREATE TABLE IF NOT EXISTS skipped (
   at TEXT NOT NULL,
   PRIMARY KEY (source, source_job_id)
 );
+CREATE TABLE IF NOT EXISTS match_evaluations (
+  job_id INTEGER PRIMARY KEY REFERENCES jobs(id),
+  run TEXT NOT NULL,
+  verdict TEXT NOT NULL,
+  track TEXT,
+  rec INTEGER,
+  hm INTEGER,
+  want INTEGER,
+  priority INTEGER,
+  why TEXT,
+  risk TEXT,
+  start_cv TEXT,
+  label TEXT,
+  label_note TEXT,
+  labelled_at TEXT,
+  created_at TEXT NOT NULL
+);
 CREATE VIRTUAL TABLE IF NOT EXISTS jobs_fts USING fts5 (title, company, description, tokenize = 'trigram');
 """
 

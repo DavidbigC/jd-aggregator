@@ -1,7 +1,7 @@
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 from ..config import SECTORS_CSV
 from ..db import connect
 from ..lang import NAMES
+from ..match import VERDICTS, set_label
 from ..normalize import ISO
 from ..registry import save_sector
 from ..runner import SOURCES, poll
@@ -87,6 +88,28 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             save_sector(conn, sectors_csv, company_id, sector, "ui")
             c = conn.execute("SELECT id, sector, sector_source FROM companies WHERE id = ?", (company_id,)).fetchone()
         return templates.TemplateResponse(request, "_sector.html", {"c": dict(c)})
+
+    @app.get("/shortlist", response_class=HTMLResponse)
+    def shortlist(request: Request, unlabelled: str = "", verdict: str = ""):
+        with closing(connect(db_path)) as conn:
+            groups, stats = queries.shortlist(conn, bool(unlabelled), verdict), queries.header_stats(conn)
+        return templates.TemplateResponse(request, "shortlist.html", {
+            "groups": groups, "unlabelled": bool(unlabelled), "verdict": verdict, "verdicts": VERDICTS, "stats": stats,
+            "nav": "shortlist"})
+
+    @app.post("/shortlist/{job_id}/label", response_class=HTMLResponse)
+    async def label(request: Request, job_id: int):
+        form = parse_qs((await request.body()).decode())
+        value, note = form.get("label", [""])[-1], form.get("note", [""])[-1]
+        with closing(connect(db_path)) as conn:
+            try:
+                set_label(conn, job_id, value, note)
+            except ValueError:
+                raise HTTPException(400)
+            e = queries.evaluation(conn, job_id)
+        if not e:
+            raise HTTPException(404)
+        return templates.TemplateResponse(request, "_label.html", {"e": e})
 
     @app.get("/sources", response_class=HTMLResponse)
     def sources(request: Request):

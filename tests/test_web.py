@@ -111,3 +111,46 @@ def test_sector_override_from_companies_page(client, tmp_path):
     assert "Senior Data Analyst" in client.get("/").text
     assert "Delta Bank,crypto,ui" in (tmp_path / "company_sectors.csv").read_text()
     assert client.post(f"/companies/{company_id}/sector/maybe").status_code == 400
+
+
+@pytest.fixture
+def shortlisted(tmp_path):
+    from jobradar.match import import_results
+    db = tmp_path / "sl.db"
+    conn = connect(db)
+    ingest(conn, [Posting(source="cryptojobslist", source_job_id=str(i), company=c, title=t, posted_at=now_iso(),
+                          locations=["Remote"], remote=True) for i, (c, t) in enumerate(
+        [("Saifuro", "Product Manager"), ("Accountable", "Junior Backend Engineer")])])
+    ids = dict(conn.execute("SELECT c.name, j.id FROM jobs j JOIN companies c ON c.id = j.company_id").fetchall())
+    import_results(conn, [
+        {"job_id": ids["Saifuro"], "verdict": "apply_now", "track": "product", "rec": 77, "hm": 72, "want": 90,
+         "why": "agent payments", "risk": "check country", "start_cv": "OneKey Web3 PM"},
+        {"job_id": ids["Accountable"], "verdict": "stretch", "track": "backend", "rec": 65, "hm": 55, "want": 75,
+         "why": "junior backend", "risk": "Java", "start_cv": "Limitless Product Engineer"}], run="test")
+    conn.close()
+    return TestClient(create_app(db, sectors_csv=tmp_path / "s.csv")), ids
+
+
+def test_shortlist_groups_by_verdict(shortlisted):
+    client, _ = shortlisted
+    page = client.get("/shortlist").text
+    assert page.index("<h2>Apply now") < page.index("Product Manager") < page.index("<h2>Stretch") < page.index("Junior Backend")
+    assert "Rec <b>77</b>" in page and "Start from: OneKey Web3 PM" in page
+    assert 'Shortlist <span class="count">2</span>' in page
+
+
+def test_label_saves_filters_and_clears(shortlisted):
+    client, ids = shortlisted
+    r = client.post(f"/shortlist/{ids['Saifuro']}/label", data={"label": "Y", "note": "love it"})
+    assert r.status_code == 200 and 'value="Y" checked' in r.text and "love it" in r.text
+    page = client.get("/shortlist", params={"unlabelled": "1"}).text
+    assert "Junior Backend" in page and "Product Manager" not in page
+    assert 'Shortlist <span class="count">1</span>' in page
+    client.post(f"/shortlist/{ids['Saifuro']}/label", data={"label": "", "note": "love it"})
+    assert "Product Manager" in client.get("/shortlist", params={"unlabelled": "1"}).text
+
+
+def test_label_rejects_bad_values(shortlisted):
+    client, ids = shortlisted
+    assert client.post(f"/shortlist/{ids['Saifuro']}/label", data={"label": "yes"}).status_code == 400
+    assert client.post("/shortlist/99999/label", data={"label": "Y"}).status_code == 404

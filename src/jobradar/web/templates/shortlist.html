@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Shortlist · Job Radar{% endblock %}
+{% block main %}
+<div class="page-head">
+  <h1>Shortlist</h1>
+  <form class="sl-filters" hx-get="/shortlist" hx-trigger="change" hx-target="#shortlist" hx-select="#shortlist"
+        hx-swap="outerHTML" hx-push-url="true">
+    {% for k, label in [('', 'All'), ('1', 'Unlabelled')] %}
+    <label class="pill"><input type="radio" name="unlabelled" value="{{ k }}" {{ 'checked' if (k == '1') == unlabelled }}><span>{{ label }}</span></label>
+    {% endfor %}
+    <select name="verdict">
+      <option value="">Every verdict</option>
+      {% for k, name in verdicts.items() %}<option value="{{ k }}" {{ 'selected' if verdict == k }}>{{ name }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<p class="sub-head">Scored against your CV: <b>Rec</b> = would a recruiter shortlist you · <b>HM</b> = can you do it and prove it · <b>Want</b> = would you want it. Label each job Yes / Maybe / No so the matcher learns what you want.</p>
+<div class="sl-layout">
+  <div id="shortlist">
+    {% for key, name, rows in groups if rows %}
+    <details class="sl-group" {{ 'open' if key != 'skip' }}>
+      <summary><h2>{{ name }} <small class="muted">{{ rows | length }}</small></h2></summary>
+      <ul class="job-list">
+        {% for e in rows %}
+        <li class="sl-row">
+          <div class="sl-main">
+            <div class="job-title"><a href="/jobs/{{ e.job_id }}" hx-get="/jobs/{{ e.job_id }}" hx-target="#detail" hx-push-url="false">{{ e.title }}</a></div>
+            <div class="job-sub">{{ e.company }}{% if e.where %} · {{ e.where }}{% endif %}{% if e.salary %} · {{ e.salary }}{% endif %}{% if e.posted_at %} · {{ e.posted_at | ago }}{% endif %}</div>
+            <div class="sl-scores">
+              <span title="Recruiter screen">Rec <b>{{ e.rec }}</b></span>
+              <span title="Hiring manager">HM <b>{{ e.hm }}</b></span>
+              <span title="Your want">Want <b>{{ e.want }}</b></span>
+              <span class="muted" title="Rec × HM × Want / 10,000">priority {{ e.priority }}</span>
+            </div>
+            <p class="sl-why">{{ e.why }}</p>
+            {% if e.risk %}<p class="sl-risk"><span class="tag warn">Watch out</span> {{ e.risk }}</p>{% endif %}
+            {% if e.start_cv %}<p class="muted sl-cv">Start from: {{ e.start_cv }}</p>{% endif %}
+          </div>
+          <div class="sl-side">
+            {% include "_label.html" %}
+            {% if e.apply_url %}<a class="btn small" href="{{ e.apply_url }}" target="_blank" rel="noopener">Apply ↗</a>{% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% else %}
+    <p class="muted empty">Nothing here{{ ' — everything is labelled' if unlabelled }}.</p>
+    {% endfor %}
+  </div>
+  <aside id="detail" class="detail"><p class="muted empty">Click a job title to read the full ad here.</p></aside>
+</div>
+{% endblock %}

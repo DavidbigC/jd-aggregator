@@ -12,6 +12,7 @@
   <a class="brand" href="/">Job Radar</a>
   <nav>
     <a href="/" class="{{ 'on' if nav == 'jobs' }}">Jobs</a>
+    <a href="/shortlist" class="{{ 'on' if nav == 'shortlist' }}">Shortlist{% if stats.unlabelled %} <span class="count">{{ stats.unlabelled }}</span>{% endif %}</a>
     <a href="/companies" class="{{ 'on' if nav == 'companies' }}">Companies</a>
     <a href="/sources" class="{{ 'on' if nav == 'sources' }}">Sources</a>
   </nav>
