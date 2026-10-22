@@ -35,6 +35,12 @@ def test_title_rules_follow_preferences():
     backend = _job("Backend Engineer (Python)", role="engineering")
     assert prefilter.title_fits(backend, p)
     assert not prefilter.title_fits(backend, {**p, "other_tracks": {"backend": "no"}})
+    no_eng = {**p, "other_tracks": {"backend": "no", "growth": "no"}}
+    assert not prefilter.title_fits(_job("Senior Data Engineer", role="data"), no_eng)
+    assert prefilter.title_fits(_job("Senior Analytics Engineer", role="data"), no_eng)
+    assert prefilter.title_fits(_job("数据分析工程师", role="data"), no_eng)
+    assert not prefilter.title_fits(_job("Senior Product Marketing Manager", role="product"), no_eng)
+    assert not prefilter.title_fits(_job("Research Engineer - Pretraining", role="research"), p)
 
 
 def test_place_rules_follow_preferences():

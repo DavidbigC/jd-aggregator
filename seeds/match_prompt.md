@@ -11,7 +11,7 @@ List the job's must-haves and nice-to-haves as written in the ad (at most 8 must
 
 ## Step 2: knockouts (eligibility only)
 A knockout is a rule David cannot meet whatever their skills: who may be hired, where they must work, which language they must speak. Only count it when you can QUOTE the ad or the job's Locations line. There are exactly four types:
-- "right_to_work": the ad requires work authorisation, citizenship or residency in a country or region ("must be authorized to work in the U.S.", "we cannot sponsor visas", "EU residents only", "Remote (United Kingdom)"), and David's work_rights and remote_regions preferences do not include it. If they are null, David has not confirmed rights anywhere, so it IS a knockout. Exception: a list of many countries on several continents is not a knockout; put "Check your country is on their list" in top_risks. A time zone ("European timezone", "overlap with EST hours") is about working hours, not who may be hired: it is never a knockout; compare it with the hours preference and put it in top_risks.
+- "right_to_work": the ad itself requires work authorisation, citizenship or a work visa for a country ("must be authorized to work in the U.S.", "US citizens only", "we cannot sponsor visas", "valid UK right to work required"), and David's work_rights preference does not cover it. If work_rights is null, David has not confirmed rights anywhere, so it IS a knockout. A remote job merely labelled with a region or country ("Remote (United Kingdom)", "Remote – USA", "EMEA", "remote in Europe") is NOT a knockout when the ad does not ask for authorisation in those words: put "Remote limited to <region>: check they hire from your country" in top_risks and in questions_for_recruiter. A time zone ("European timezone", "overlap with EST hours") is about working hours, not who may be hired: it is never a knockout; compare it with the hours preference and put it in top_risks.
 - "location": the role is not fully remote. That covers hybrid, "X days in the office", onsite, commuting, or the ad naming an office city as the place of work ("Central Zurich location", "based in our Lisbon office") without the ad itself saying the role is remote. The job board's remote label is not the ad saying remote. Set "actually_remote": false. Occasional travel, offsites or team meetups are not a knockout; put them in top_risks.
 - "language": a required language David does not speak (David speaks English and Mandarin).
 - "licence": a licence, security clearance or student status David lacks ("Series 7 required", "currently pursuing a degree").
@@ -47,7 +47,7 @@ Use a CN CV only for Chinese-language ads.
 "apply_notes": what the ad asks applicants to do, quoted or closely paraphrased: a code word to mention, details to include (country of residence, city), a cover note, a portfolio, Dune or GitHub link. Empty list if none.
 
 ## Step 6: check before you answer
-- A must-have about work rights, location or language that is "no" must also be a knockout.
+- A must-have about work authorisation, office attendance or language that is "no" must also be a knockout. Where David lives is unknown, so a residence or region must-have is "partial", never a knockout.
 - If top_risks doubts that the role is remote, decide: either it is a "location" knockout or the ad says remote in its own words.
 - The recruiter score must reflect the "no" must-haves and the years gap.
 

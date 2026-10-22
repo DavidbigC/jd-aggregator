@@ -13,8 +13,11 @@ DROP = re.compile(r"legal|counsel|accountant|accounting|payroll|recruit|talent|d
                   r"front-end|mobile|\bios\b|android|solidity|smart contract|c\+\+|intern|实习|"
                   r"accelerator program|\bBAP\b|filmmaker|\bsoc\b|\bnoc\b|network engineer|site reliability|"
                   r"people business partner|identity access|creative|credit analyst|billing analyst|livechat|"
-                  r"client service|portfolio manager|finance system", re.I)
+                  r"client service|portfolio manager|finance system|machine learning|\bml\b|pre-?training|"
+                  r"post-?training|reinforcement learning|\brl\b|inference|robotics|chip design", re.I)
 ANALYST = re.compile(r"analy|data|insight|business intelligence|\bbi\b|分析|数据", re.I)
+# Engineering titles a backend "no" removes; analytics engineers stay.
+ENGINEER = re.compile(r"engineer|developer|architect|technical staff|工程[师師]|开发|開發", re.I)
 # Analyst work types a "no" (or, for compliance, anything but yes/maybe) removes by title.
 ANALYST_TYPES = {
     "risk_fraud": re.compile(r"risk|fraud|风控", re.I),
@@ -29,7 +32,7 @@ TRACKS = {
     "product": re.compile(r"product|产品", re.I),
     "research": re.compile(r"research|economist|研究", re.I),
     "ops_strategy": re.compile(r"strateg|operations|\bops\b|策略|运营", re.I),
-    "growth": re.compile(r"growth|增长", re.I),
+    "growth": re.compile(r"growth|marketing|marketer|business development|增长", re.I),
     "quant": re.compile(r"quant|量化", re.I),
 }
 REGIONS = {
@@ -96,6 +99,8 @@ def title_fits(job: dict, prefs: dict) -> bool:
     for name, rx in TRACKS.items():
         if others.get(name) == "no" and rx.search(title) and not ANALYST.search(title):
             return False
+    if others.get("backend") == "no" and ENGINEER.search(title) and not re.search(r"analy|分析", title, re.I):
+        return False
     if KEEP.search(title) or job["role"] in ("product", "data", "research"):
         return True
     if analyst.get("compliance_kyc_aml") in ("yes", "maybe") and ANALYST_TYPES["compliance_kyc_aml"].search(title):
