@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -61,6 +63,7 @@ def test_opening_question_then_proposal_then_apply(chat_client):
     assert "UK hours only please" in r.text and "Proposed change" in r.text
     assert "Working hours: UK / EU hours only" in r.text and "bogus" not in r.text
     assert [m["role"] for m in sent[1][1:]] == ["user", "assistant", "user"]
+    assert json.loads(sent[1][2]["content"]) == {"reply": "Hi! Which analyst work interests you?", "changes": None}
 
     conn = connect(db)
     msg_id = conn.execute("SELECT id FROM pref_messages WHERE status = 'pending'").fetchone()[0]

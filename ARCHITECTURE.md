@@ -46,7 +46,7 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
   - the field list;
   - the current preferences;
   - what is still unset;
-  - the last 20 messages.
+  - the last 20 messages, with DeepSeek's own past turns sent back as the `{"reply", "changes"}` JSON it wrote. Sent as plain text, they led `deepseek-flash` in JSON mode to return blank replies most of the time.
 
   DeepSeek returns `{"reply", "changes"}`. The changes are validated and shown as a proposal card, and **Apply** saves a new preferences version, which updates the summary through an htmx out-of-band swap. With an empty conversation, the page asks DeepSeek for an opening question about the first unset item.
 

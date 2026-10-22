@@ -226,13 +226,21 @@ def new_conversation(conn) -> None:
     _add(conn, "divider", "")
 
 
+def _as_sent(m: dict) -> str:
+    """Past assistant turns go back as the JSON DeepSeek wrote; as plain text they make JSON mode return blanks."""
+    if m["role"] != "assistant":
+        return m["content"]
+    changes = json.loads(m["proposal"]) if m["proposal"] else None
+    return json.dumps({"reply": m["content"], "changes": changes}, ensure_ascii=False)
+
+
 def reply(conn, key: str, prompt: str, text: str) -> list[dict]:
     """Send David's message (or, when empty, the page-opened cue) to DeepSeek; store and return the new messages."""
     prefs, _ = current(conn)
     system = (f"{prompt}\n\n## Preference fields\n{schema_for_prompt()}\n\n"
               f"## Current preferences (json)\n{json.dumps(prefs, ensure_ascii=False)}\n\n"
               f"## Not set yet\n{', '.join(missing(prefs)) or 'nothing, everything is set'}")
-    history = [{"role": m["role"], "content": m["content"]} for m in messages(conn)][-HISTORY:]
+    history = [{"role": m["role"], "content": _as_sent(m)} for m in messages(conn)][-HISTORY:]
     history.append({"role": "user", "content": text or OPENED})
     if history[0]["role"] != "user":
         history.insert(0, {"role": "user", "content": OPENED})

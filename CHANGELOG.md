@@ -26,3 +26,4 @@
 - 2026-10-22 feat: add a Shortlist page to review matched jobs and label them Yes / Maybe / No
 - 2026-10-22 feat: load a DeepSeek API key in Settings and set job preferences by chatting with DeepSeek
 - 2026-10-22 fix: retry and log failed DeepSeek chat replies, and keep the typed message after an error
+- 2026-10-22 fix: send DeepSeek its past chat turns as JSON so JSON mode stops returning blank replies
