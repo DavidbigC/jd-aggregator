@@ -1,0 +1,17 @@
+<div id="msg-{{ m.id }}" class="msg {{ m.role }}">
+  <div class="bubble">{{ m.content }}</div>
+  {% if m.changes %}
+  <div class="proposal {{ m.status }}">
+    <b>Proposed change</b>
+    <ul>{% for c in m.changes %}<li>{{ c }}</li>{% endfor %}</ul>
+    {% if m.status == 'pending' %}
+    <div class="card-actions">
+      <button class="small" hx-post="/preferences/proposal/{{ m.id }}/apply" hx-target="#msg-{{ m.id }}" hx-swap="outerHTML">Apply</button>
+      <button class="ghost small" hx-post="/preferences/proposal/{{ m.id }}/discard" hx-target="#msg-{{ m.id }}" hx-swap="outerHTML">Discard</button>
+    </div>
+    {% else %}
+    <p class="muted">{{ 'Applied' if m.status == 'applied' else 'Discarded' }}</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

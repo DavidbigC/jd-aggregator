@@ -1,6 +1,6 @@
 # Job Radar — Architecture
 
-Local aggregator for crypto job postings. It polls company hiring systems (ATS), crypto job boards and popular general job sites in many languages, removes duplicates, fills in full job details, and serves a browsable UI at http://127.0.0.1:8765. It runs on one Mac, with no cloud and no LLM yet.
+Local aggregator for crypto job postings. It polls company hiring systems (ATS), crypto job boards and popular general job sites in many languages, removes duplicates, fills in full job details, and serves a browsable UI at http://127.0.0.1:8765. It runs on one Mac with no cloud. The only LLM is DeepSeek, called with the key David loads in Settings (docs/decisions/0005).
 
 ## Flow
 collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages) → FastAPI + Jinja + htmx UI
@@ -29,11 +29,25 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
   - David's `label` (Y/M/N), `label_note` and `labelled_at`.
 
   An import updates the scores and never touches the label fields (docs/decisions/0004).
+- **preferences** — David's job preferences as versioned JSON (the newest row is current). The fields and allowed values are defined in `prefs.SCHEMA`; the default focus is data analyst.
+- **pref_messages** — the preferences chat. An assistant message may carry a `proposal` (validated changes) with `status` pending / applied / discarded. A `divider` row starts a new conversation.
 
 ## Shortlist (match.py, /shortlist)
 - **Where the scores come from:** `python -m jobradar match import FILE.json` loads evaluations. For now these are hand-scored runs from job_related/docs/runs/; later the LLM matcher writes through the same `import_results()`.
 - **The page:** jobs are grouped by verdict and sorted by priority, with "Unlabelled only" and verdict filters. Clicking a title opens the full ad in the detail pane.
 - **Labelling:** Y / M / N plus a note are saved through htmx (`POST /shortlist/{job_id}/label`). The nav tab shows how many jobs are still unlabelled.
+
+## DeepSeek, Settings and Preferences (keystore.py, deepseek.py, prefs.py)
+- **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jobradar.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
+- **Client.** `deepseek.py` makes plain httpx calls: `balance()`, and `chat_json()`, which uses JSON mode with thinking off by default and retries once on an empty reply.
+- **Preferences chat.** `/preferences` shows what the matcher knows next to a chat with `deepseek-flash`. Each turn sends:
+  - the system prompt from `seeds/prefs_assistant_prompt.md`;
+  - the field list;
+  - the current preferences;
+  - what is still unset;
+  - the last 20 messages.
+
+  DeepSeek returns `{"reply", "changes"}`. The changes are validated and shown as a proposal card, and **Apply** saves a new preferences version, which updates the summary through an htmx out-of-band swap. With an empty conversation, the page asks DeepSeek for an opening question about the first unset item.
 
 ## Dedup ladder (ingest.py)
 1. Same (source, source_job_id): a re-sighting of a known job.
@@ -73,10 +87,11 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
   - remote_scope: anywhere unless a country or region is named.
 
 ## Layout
-- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match, `__main__`
+- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match, keystore, deepseek, prefs, `__main__`
 - **src/jobradar/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
 - **src/jobradar/web/** — app.py, queries.py, templates/, static/
 - **seeds/boards.csv** — research seed of about 640 boards
+- **seeds/prefs_assistant_prompt.md** — the preferences assistant's instructions
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running

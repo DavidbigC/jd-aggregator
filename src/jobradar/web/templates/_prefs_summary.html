@@ -1,0 +1,16 @@
+<section id="prefs-summary" class="card prefs"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <h2>What the matcher knows {% if missing %}<small class="muted">{{ missing }} not set yet</small>{% endif %}</h2>
+  <dl>
+    {% for r in summary %}
+    <dt>{{ r.label }}</dt>
+    {% if r.levels %}
+    <dd><ul class="pref-items">{% for name, level in r.levels %}
+      <li>{{ name }}: {% if level %}<b class="lvl-{{ level | lower }}">{{ level }}</b>{% else %}<span class="unset">not set yet</span>{% endif %}</li>
+    {% endfor %}</ul></dd>
+    {% elif r.value %}<dd>{{ r.value }}</dd>
+    {% elif r.optional %}<dd class="muted">none</dd>
+    {% else %}<dd class="unset">not set yet</dd>{% endif %}
+    {% endfor %}
+  </dl>
+  {% if version %}<p class="muted small-print">Version {{ version }}</p>{% endif %}
+</section>

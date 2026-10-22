@@ -106,6 +106,20 @@ CREATE TABLE IF NOT EXISTS match_evaluations (
   labelled_at TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS preferences (
+  version INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT NOT NULL,
+  source TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pref_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  role TEXT NOT NULL,
+  content TEXT NOT NULL,
+  proposal TEXT,
+  status TEXT,
+  created_at TEXT NOT NULL
+);
 CREATE VIRTUAL TABLE IF NOT EXISTS jobs_fts USING fts5 (title, company, description, tokenize = 'trigram');
 """
 

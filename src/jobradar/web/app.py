@@ -1,14 +1,18 @@
+import json
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode
 
+import httpx
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.concurrency import run_in_threadpool
 
-from ..config import SECTORS_CSV
+from .. import deepseek, keystore, prefs
+from ..config import PREFS_PROMPT, SECTORS_CSV
 from ..db import connect
 from ..lang import NAMES
 from ..match import VERDICTS, set_label
@@ -34,6 +38,26 @@ def ago(iso: str | None) -> str:
 def _run_in_background(db_path, name: str) -> None:
     with closing(connect(db_path)) as conn:
         poll(conn, sources=[name], force=True, log=lambda _: None)
+
+
+def _check_key(key: str) -> tuple[str | None, str | None]:
+    """(balance text, error) from DeepSeek's free balance endpoint."""
+    try:
+        b = deepseek.balance(key)
+    except httpx.HTTPStatusError as e:
+        return None, f"DeepSeek rejected this key ({e.response.status_code})."
+    except httpx.HTTPError:
+        return None, "Couldn't reach DeepSeek. Check your internet connection and try again."
+    text = " · ".join(f"{i['currency']} {i['total_balance']}" for i in b.get("balance_infos", [])) or "none"
+    return (text if b.get("is_available") else f"{text} (top up to make calls)"), None
+
+
+def _msg(m: dict) -> dict:
+    return {**m, "changes": prefs.describe_change(json.loads(m["proposal"])) if m.get("proposal") else []}
+
+
+async def _form(request: Request) -> dict:
+    return {k: v[-1] for k, v in parse_qs((await request.body()).decode()).items()}
 
 
 def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
@@ -127,5 +151,107 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             raise HTTPException(404)
         background.add_task(_run_in_background, db_path, name)
         return HTMLResponse('<span class="muted">queued — refresh in a minute</span>')
+
+    def key_card(request: Request, **ctx):
+        key, source = keystore.get_key()
+        return templates.TemplateResponse(request, "_deepseek.html", {
+            "key_set": bool(key), "source": source, "tail": key[-4:] if key else "", **ctx})
+
+    @app.get("/settings", response_class=HTMLResponse)
+    def settings(request: Request):
+        key, source = keystore.get_key()
+        with closing(connect(db_path)) as conn:
+            stats = queries.header_stats(conn)
+        return templates.TemplateResponse(request, "settings.html", {
+            "key_set": bool(key), "source": source, "tail": key[-4:] if key else "", "stats": stats,
+            "nav": "settings"})
+
+    @app.post("/settings/deepseek", response_class=HTMLResponse)
+    async def save_key(request: Request):
+        key = (await _form(request)).get("key", "").strip()
+        if not keystore.KEY_RE.match(key):
+            return key_card(request, checked=True, error="That doesn't look like a DeepSeek key. It starts with sk-.")
+        balance, error = await run_in_threadpool(_check_key, key)
+        if error:
+            return key_card(request, checked=True, error=error)
+        keystore.set_key(key)
+        return key_card(request, checked=True, balance=balance)
+
+    @app.post("/settings/deepseek/test", response_class=HTMLResponse)
+    def test_key(request: Request):
+        key, _ = keystore.get_key()
+        if not key:
+            return key_card(request)
+        balance, error = _check_key(key)
+        return key_card(request, checked=True, balance=balance, error=error)
+
+    @app.post("/settings/deepseek/delete", response_class=HTMLResponse)
+    async def delete_key(request: Request):
+        if not (await _form(request)).get("confirm"):
+            return key_card(request, checked=True, confirm=True)
+        keystore.delete_key()
+        return key_card(request)
+
+    @app.get("/preferences", response_class=HTMLResponse)
+    def preferences(request: Request):
+        key, _ = keystore.get_key()
+        with closing(connect(db_path)) as conn:
+            p, version = prefs.current(conn)
+            msgs, stats = prefs.messages(conn), queries.header_stats(conn)
+        return templates.TemplateResponse(request, "preferences.html", {
+            "summary": prefs.summary(p), "missing": len(prefs.missing(p)), "version": version,
+            "msgs": [_msg(m) for m in msgs], "has_key": bool(key), "stats": stats, "nav": "preferences"})
+
+    def chat_turn(key: str, text: str) -> list[dict]:
+        with closing(connect(db_path)) as conn:
+            return prefs.reply(conn, key, PREFS_PROMPT.read_text(), text)
+
+    @app.post("/preferences/chat", response_class=HTMLResponse)
+    async def chat(request: Request):
+        key, _ = keystore.get_key()
+        text = (await _form(request)).get("text", "").strip()[:2000]
+        error = None
+        if not key:
+            error = "Add your DeepSeek API key in Settings first."
+        else:
+            try:
+                new = await run_in_threadpool(chat_turn, key, text)
+            except httpx.HTTPStatusError as e:
+                error = f"DeepSeek returned an error ({e.response.status_code}). Check your key and balance in Settings."
+            except (httpx.HTTPError, ValueError):
+                error = "DeepSeek didn't answer properly. Please send that again."
+        if error:
+            return templates.TemplateResponse(request, "_chat_msg.html", {"m": {
+                "id": "error", "role": "assistant error", "content": error}})
+        return HTMLResponse("".join(templates.get_template("_chat_msg.html").render(m=_msg(m)) for m in new))
+
+    def proposal_response(request: Request, msg_id: int, ok: bool):
+        if not ok:
+            raise HTTPException(404)
+        with closing(connect(db_path)) as conn:
+            m = dict(conn.execute("SELECT * FROM pref_messages WHERE id = ?", (msg_id,)).fetchone())
+            p, version = prefs.current(conn)
+        summary = templates.get_template("_prefs_summary.html").render(
+            summary=prefs.summary(p), missing=len(prefs.missing(p)), version=version, oob=True)
+        return HTMLResponse(templates.get_template("_chat_msg.html").render(m=_msg(m)) + summary)
+
+    @app.post("/preferences/proposal/{msg_id}/apply", response_class=HTMLResponse)
+    def apply_proposal(request: Request, msg_id: int):
+        with closing(connect(db_path)) as conn:
+            ok = prefs.apply(conn, msg_id)
+        return proposal_response(request, msg_id, ok)
+
+    @app.post("/preferences/proposal/{msg_id}/discard", response_class=HTMLResponse)
+    def discard_proposal(request: Request, msg_id: int):
+        with closing(connect(db_path)) as conn:
+            ok = prefs.discard(conn, msg_id)
+        return proposal_response(request, msg_id, ok)
+
+    @app.post("/preferences/new", response_class=HTMLResponse)
+    def new_conversation(request: Request):
+        key, _ = keystore.get_key()
+        with closing(connect(db_path)) as conn:
+            prefs.new_conversation(conn)
+        return templates.TemplateResponse(request, "_chat_log.html", {"msgs": [], "has_key": bool(key)})
 
     return app

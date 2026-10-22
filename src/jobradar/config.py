@@ -6,6 +6,7 @@ DATA_DIR = Path(os.environ.get("JOBRADAR_DATA", ROOT / "data"))
 DB_PATH = DATA_DIR / "jobradar.db"
 SEED_CSV = ROOT / "seeds" / "boards.csv"
 SECTORS_CSV = ROOT / "seeds" / "company_sectors.csv"
+PREFS_PROMPT = ROOT / "seeds" / "prefs_assistant_prompt.md"
 
 STALE_DAYS = 10
 MATCH_WINDOW_DAYS = 45

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Preferences · Job Radar{% endblock %}
+{% block main %}
+<div class="page-head">
+  <h1>Preferences</h1>
+</div>
+<p class="sub-head">What the job matcher knows about you. To change anything, tell DeepSeek in the chat. Nothing changes until you press <b>Apply</b>.</p>
+<div class="pref-layout">
+  {% include "_prefs_summary.html" %}
+  <section class="card chat">
+    <div class="chat-head">
+      <h2>Chat with DeepSeek</h2>
+      {% if has_key %}<button class="ghost small" hx-post="/preferences/new" hx-target="#chat-log" hx-swap="outerHTML">New conversation</button>{% endif %}
+    </div>
+    {% include "_chat_log.html" %}
+    {% if has_key %}
+    <form class="chat-form" hx-post="/preferences/chat" hx-target="#chat-log" hx-swap="beforeend" hx-indicator="#typing"
+          hx-disabled-elt="find button"
+          hx-on::after-request="if (event.detail.successful) this.reset(); const l = document.getElementById('chat-log'); l.scrollTop = l.scrollHeight">
+      <textarea name="text" rows="2" required placeholder="Tell DeepSeek what you want, e.g. &quot;UK hours only, no visa needed&quot;" aria-label="Message"
+                onkeydown="if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
+      <button>Send</button>
+    </form>
+    <p id="typing" class="typing muted">DeepSeek is typing…</p>
+    {% else %}
+    <p class="card-msg">Add your DeepSeek API key in <a href="/settings">Settings</a> to start the chat.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+<section id="deepseek" class="card"
+         {% if key_set and not checked %}hx-post="/settings/deepseek/test" hx-trigger="load" hx-swap="outerHTML"{% endif %}>
+  <h2>DeepSeek API key</h2>
+  <p class="muted">DeepSeek runs the preferences chat and scores jobs. The key is kept in your Mac's Keychain, never in the database.</p>
+  {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
+  {% if key_set %}
+  <p class="card-msg">
+    {% if balance %}<span class="ok">Connected</span> · key ends …{{ tail }} · balance {{ balance }}
+    {% elif checked %}Key ends …{{ tail }}
+    {% else %}Key ends …{{ tail }} · checking…{% endif %}
+  </p>
+  {% if source == 'env' %}<p class="muted">This key comes from the <code>DEEPSEEK_API_KEY</code> environment variable.</p>{% endif %}
+  <div class="card-actions">
+    {% if confirm %}
+    <span>Remove the key?</span>
+    <form hx-post="/settings/deepseek/delete" hx-target="#deepseek" hx-swap="outerHTML"><input type="hidden" name="confirm" value="1"><button>Yes, remove</button></form>
+    <form hx-post="/settings/deepseek/test" hx-target="#deepseek" hx-swap="outerHTML"><button class="ghost">Cancel</button></form>
+    {% else %}
+    <form hx-post="/settings/deepseek/test" hx-target="#deepseek" hx-swap="outerHTML"><button class="ghost">Test again</button></form>
+    {% if source != 'env' %}<form hx-post="/settings/deepseek/delete" hx-target="#deepseek" hx-swap="outerHTML"><button class="ghost">Remove key</button></form>{% endif %}
+    {% endif %}
+  </div>
+  {% else %}
+  <form class="key-form" hx-post="/settings/deepseek" hx-target="#deepseek" hx-swap="outerHTML">
+    <input type="password" name="key" placeholder="Paste your DeepSeek API key (sk-…)" autocomplete="off" aria-label="DeepSeek API key" required>
+    <button>Save</button>
+  </form>
+  <p class="muted">Get a key at platform.deepseek.com → API keys. Saving checks it with DeepSeek first (free).</p>
+  {% endif %}
+</section>
