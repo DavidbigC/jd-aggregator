@@ -19,6 +19,9 @@ SCHEMA = {
         "product": "Product management", "research": "Research", "ops_strategy": "Ops & strategy",
         "growth": "Growth", "quant": "Quant", "backend": "Backend engineering"}),
     "location": ("Where", "choice", {"remote_only": "Remote only", "remote_or_uk_office": "Remote, or a UK office"}),
+    "remote_regions": ("Region-limited remote jobs you can take", "multi", {
+        "uk": "UK", "europe": "Europe / EMEA", "us": "US", "americas": "Canada & Latin America",
+        "apac": "Asia-Pacific", "greater_china": "China, Hong Kong & Taiwan", "middle_east": "Middle East"}),
     "single_country_remote": ("Remote limited to one country", "choice", {
         "show": "Show them", "uk_eu_only": "Only if UK or EU", "hide": "Hide them"}),
     "work_rights": ("Right to work", "text", None),
@@ -43,6 +46,7 @@ DEFAULTS = {
     "analyst_types": {"product_data_analytics": "yes", "onchain_analytics": "yes"},
     "other_tracks": {},
     "location": "remote_only",
+    "remote_regions": None,
     "single_country_remote": None,
     "work_rights": None,
     "needs_sponsorship": None,

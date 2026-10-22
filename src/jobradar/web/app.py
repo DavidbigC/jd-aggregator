@@ -17,6 +17,8 @@ from ..config import PREFS_PROMPT, SECTORS_CSV
 from ..db import connect
 from ..lang import NAMES
 from ..match import VERDICTS, set_label
+from ..match import evaluate
+from ..match import runner as matcher
 from ..normalize import ISO
 from ..registry import save_sector
 from ..runner import SOURCES, poll
@@ -115,13 +117,59 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             c = conn.execute("SELECT id, sector, sector_source FROM companies WHERE id = ?", (company_id,)).fetchone()
         return templates.TemplateResponse(request, "_sector.html", {"c": dict(c)})
 
+    def run_panel(request: Request, conn, **ctx):
+        key, _ = keystore.get_key()
+        run = matcher.running(conn)
+        return templates.TemplateResponse(request, "_match_run.html", {
+            "has_key": bool(key), "run": run, "last": None if run else matcher.last_run(conn), **ctx})
+
     @app.get("/shortlist", response_class=HTMLResponse)
-    def shortlist(request: Request, unlabelled: str = "", verdict: str = ""):
+    def shortlist(request: Request, unlabelled: str = "", verdict: str = "", track: str = ""):
+        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
-            groups, stats = queries.shortlist(conn, bool(unlabelled), verdict), queries.header_stats(conn)
-        return templates.TemplateResponse(request, "shortlist.html", {
-            "groups": groups, "unlabelled": bool(unlabelled), "verdict": verdict, "verdicts": VERDICTS, "stats": stats,
-            "nav": "shortlist"})
+            groups, stats = queries.shortlist(conn, bool(unlabelled), verdict, track), queries.header_stats(conn)
+            run = matcher.running(conn)
+            ctx = {"groups": groups, "unlabelled": bool(unlabelled), "verdict": verdict, "track": track,
+                   "verdicts": VERDICTS, "tracks": queries.tracks(conn), "agreement": queries.agreement(conn),
+                   "has_key": bool(key), "run": run, "last": None if run else matcher.last_run(conn),
+                   "stats": stats, "nav": "shortlist"}
+        return templates.TemplateResponse(request, "shortlist.html", ctx)
+
+    @app.post("/shortlist/run", response_class=HTMLResponse)
+    async def run_matcher(request: Request):
+        def check():
+            with closing(connect(db_path)) as conn:
+                return matcher.plan(conn)
+        p = await run_in_threadpool(check)
+        with closing(connect(db_path)) as conn:
+            return run_panel(request, conn, plan=p, sample=matcher.SAMPLE)
+
+    @app.post("/shortlist/run/start", response_class=HTMLResponse)
+    async def start_matcher(request: Request):
+        limit = (await _form(request)).get("limit", "")
+        key, _ = keystore.get_key()
+        error = None
+        if not key:
+            error = "Add your DeepSeek API key in Settings first."
+        else:
+            try:
+                await run_in_threadpool(matcher.start, db_path, key, int(limit) if limit.isdigit() else None)
+            except matcher.AlreadyRunning:
+                error = "A run is already in progress."
+        with closing(connect(db_path)) as conn:
+            return run_panel(request, conn, error=error)
+
+    @app.get("/shortlist/run/status", response_class=HTMLResponse)
+    def matcher_status(request: Request):
+        with closing(connect(db_path)) as conn:
+            if not matcher.running(conn):
+                return HTMLResponse("", headers={"HX-Refresh": "true"})
+            return run_panel(request, conn)
+
+    @app.get("/shortlist/run/panel", response_class=HTMLResponse)
+    def matcher_panel(request: Request):
+        with closing(connect(db_path)) as conn:
+            return run_panel(request, conn)
 
     @app.post("/shortlist/{job_id}/label", response_class=HTMLResponse)
     async def label(request: Request, job_id: int):
@@ -202,7 +250,8 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             msgs, stats = prefs.messages(conn), queries.header_stats(conn)
         return templates.TemplateResponse(request, "preferences.html", {
             "summary": prefs.summary(p), "missing": len(prefs.missing(p)), "version": version,
-            "msgs": [_msg(m) for m in msgs], "has_key": bool(key), "stats": stats, "nav": "preferences"})
+            "msgs": [_msg(m) for m in msgs], "has_key": bool(key), "profile": evaluate.PROFILE.read_text(),
+            "stats": stats, "nav": "preferences"})
 
     def chat_turn(key: str, text: str) -> list[dict]:
         with closing(connect(db_path)) as conn:

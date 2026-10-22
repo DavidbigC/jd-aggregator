@@ -1,8 +1,11 @@
-from .normalize import now_iso
+from ..normalize import now_iso
 
-VERDICTS = {"apply_now": "Apply now", "tailor_then_apply": "Tailor then apply", "stretch": "Stretch", "skip": "Skipped"}
+VERDICTS = {"apply_now": "Apply now", "tailor_then_apply": "Tailor then apply", "stretch": "Stretch",
+            "needs_ad": "Ad too short to judge", "skip": "Skipped"}
+SHOWN = ("apply_now", "tailor_then_apply", "stretch")
 LABELS = {"Y", "M", "N"}
-FIELDS = ("verdict", "track", "rec", "hm", "want", "why", "risk", "start_cv")
+FIELDS = ("verdict", "track", "rec", "hm", "want", "why", "risk", "start_cv", "reason", "model", "prompt_version",
+          "profile_hash", "prefs_version", "description_hash", "result")
 
 
 def import_results(conn, rows: list[dict], run: str) -> int:
@@ -12,7 +15,7 @@ def import_results(conn, rows: list[dict], run: str) -> int:
     for r in rows:
         if r["job_id"] not in known:
             continue
-        priority = round(r["rec"] * r["hm"] * r["want"] / 10000)
+        priority = round(r["rec"] * r["hm"] * r["want"] / 10000) if r.get("rec") is not None else None
         conn.execute(
             f"INSERT INTO match_evaluations (job_id, run, priority, created_at, {', '.join(FIELDS)}) "
             f"VALUES (?, ?, ?, ?, {', '.join('?' * len(FIELDS))}) "

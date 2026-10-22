@@ -23,19 +23,27 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 - **source_runs** — one row per source run: status, counts, error.
 - **jobs_fts** — FTS5 trigram index over title, company and description.
 - **match_evaluations** — job-fit scores, one row per job, shown on `/shortlist`. Each row has:
-  - `run`, `verdict` (apply_now / tailor_then_apply / stretch / skip) and `track`;
+  - `run`, `verdict` (apply_now / tailor_then_apply / stretch / needs_ad / skip), `reason` (why a skip) and `track`;
   - scores `rec`, `hm` and `want`, plus `priority` = rec·hm·want/10000;
-  - `why`, `risk` and `start_cv`;
+  - `why`, `risk` and `start_cv` (the closest earlier application CV);
+  - stamps `model`, `prompt_version`, `profile_hash`, `prefs_version` and `description_hash`, and `result`, DeepSeek's full validated JSON. Hand-scored rows have no `model`;
   - David's `label` (Y/M/N), `label_note` and `labelled_at`.
 
   An import updates the scores and never touches the label fields (docs/decisions/0004).
 - **preferences** — David's job preferences as versioned JSON (the newest row is current). The fields and allowed values are defined in `prefs.SCHEMA`; the default focus is data analyst.
+- **match_runs** — one row per matcher run: status (running / done / error / interrupted), model, preferences version, jobs planned, scored and failed, tokens and cost in USD.
 - **pref_messages** — the preferences chat. An assistant message may carry a `proposal` (validated changes) with `status` pending / applied / discarded. A `divider` row starts a new conversation.
 
-## Shortlist (match.py, /shortlist)
-- **Where the scores come from:** `python -m jobradar match import FILE.json` loads evaluations. For now these are hand-scored runs from job_related/docs/runs/; later the LLM matcher writes through the same `import_results()`.
-- **The page:** jobs are grouped by verdict and sorted by priority, with "Unlabelled only" and verdict filters. Clicking a title opens the full ad in the detail pane.
-- **Labelling:** Y / M / N plus a note are saved through htmx (`POST /shortlist/{job_id}/label`). The nav tab shows how many jobs are still unlabelled.
+## Matcher and Shortlist (match/, /shortlist)
+DeepSeek scores the jobs; the code decides the verdict. See docs/decisions/0005.
+- **Prefilter** (`match/prefilter.py`, free). Active crypto jobs → posted within `fresh_days` → title fits (keep and drop rules, widened or narrowed by `analyst_types` and `other_tracks`; compliance stays out unless David says yes or maybe) → location fits → ad language → one job per company and normalised title. Location: remote-anywhere (or 5+ "Remote (XX)" entries) and unspecified remote always pass; region-limited remote passes when its region is in `remote_regions` (UK and Europe until David sets it), with `single_country_remote` applied; offices only with `remote_or_uk_office`. The page shows the count after each step.
+- **Scoring** (`match/evaluate.py`). One call per job to `deepseek-v4-pro` with thinking on and JSON mode. The system message is `seeds/candidate_profile.md` + `seeds/match_prompt.md`, byte-stable so DeepSeek's prefix cache covers it; the user message has the preferences JSON, then the job and its whole ad. `clean()` validates the reply (scores clamped to 0–100, unquoted knockouts dropped, unknown CVs dropped) and `verdict()` applies the spec's rules in order: knockout or not actually remote → skip; want < 45 → skip; backend/quant → stretch or skip; then apply now, tailor then apply, stretch, skip. An ad still under 500 characters after a fetch from its sighting URLs gets `needs_ad` without a DeepSeek call.
+- **Re-scoring.** A job is scored again only when it has no DeepSeek row, or its ad, the profile, the prompt, the model or the preferences version changed.
+- **Runs** (`match/runner.py`). **Run matcher** on `/shortlist` runs the prefilter and shows how many jobs need scoring and the estimated cost (peak or off-peak price by UTC time). Nothing is spent until David presses **Score N jobs** or **Try 20 first** (labelled and hand-scored jobs go first). The run is a background thread in the server, 8 jobs at a time; the panel polls every 3 s and reloads the page when the run ends. One run at a time per process; a `running` row with no live thread (server restart) is marked interrupted. A 401/402 from DeepSeek stops the run.
+- **The page.** Grouped by verdict and sorted by priority, with Unlabelled, verdict and track filters. At most 3 jobs per company per group; the rest sit under "more from companies already listed". Each row shows the scores, why, watch-outs, the base CV, "DeepSeek's notes" (must-haves met or not, what to lead with, keywords, interview prep, questions for the recruiter) and who scored it. The header line shows how many of David's labels DeepSeek agrees with (Yes/Maybe vs a shown verdict, No vs skip).
+- **Labelling:** Y / M / N plus a note are saved through htmx (`POST /shortlist/{job_id}/label`). Re-scoring never touches labels. The nav tab counts unlabelled jobs with a shown verdict.
+- **Hand-scored runs** still load with `python -m jobradar match import FILE.json`, through the same `import_results()`.
+- **Profile review.** The Preferences page shows the candidate profile; corrections go into `profile_notes` through the chat and win over the profile.
 
 ## DeepSeek, Settings and Preferences (keystore.py, deepseek.py, prefs.py)
 - **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jobradar.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
@@ -88,11 +96,13 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
   - remote_scope: anywhere unless a country or region is named.
 
 ## Layout
-- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match, keystore, deepseek, prefs, `__main__`
+- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match/ (prefilter, evaluate, runner), keystore, deepseek, prefs, `__main__`
 - **src/jobradar/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
 - **src/jobradar/web/** — app.py, queries.py, templates/, static/
 - **seeds/boards.csv** — research seed of about 640 boards
 - **seeds/prefs_assistant_prompt.md** — the preferences assistant's instructions
+- **seeds/candidate_profile.md** — the profile DeepSeek scores against (written from devmaster-cv, claim levels kept, no location)
+- **seeds/match_prompt.md** — the matcher's rubric, rules and output shape; its hash is each row's `prompt_version`
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running

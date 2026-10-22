@@ -12,37 +12,28 @@
       <option value="">Every verdict</option>
       {% for k, name in verdicts.items() %}<option value="{{ k }}" {{ 'selected' if verdict == k }}>{{ name }}</option>{% endfor %}
     </select>
+    <select name="track">
+      <option value="">Every track</option>
+      {% for t in tracks %}<option value="{{ t }}" {{ 'selected' if track == t }}>{{ t | replace('_', ' ') | capitalize }}</option>{% endfor %}
+    </select>
   </form>
 </div>
-<p class="sub-head">Scored against your CV: <b>Rec</b> = would a recruiter shortlist you · <b>HM</b> = can you do it and prove it · <b>Want</b> = would you want it. Label each job Yes / Maybe / No so the matcher learns what you want.</p>
+<p class="sub-head">DeepSeek scores each job against your profile and <a href="/preferences">preferences</a>: <b>Rec</b> = would a recruiter shortlist you · <b>HM</b> = can you do it and prove it · <b>Want</b> = would you want it. Label jobs Yes / Maybe / No so we can check DeepSeek's judgement.{% if agreement[1] %} DeepSeek agrees with <b>{{ agreement[0] }} of {{ agreement[1] }}</b> of your labels.{% endif %}</p>
+{% include "_match_run.html" %}
 <div class="sl-layout">
   <div id="shortlist">
-    {% for key, name, rows in groups if rows %}
-    <details class="sl-group" {{ 'open' if key != 'skip' }}>
-      <summary><h2>{{ name }} <small class="muted">{{ rows | length }}</small></h2></summary>
+    {% for key, name, rows, extra in groups if rows %}
+    <details class="sl-group" {{ 'open' if key not in ('skip', 'needs_ad') }}>
+      <summary><h2>{{ name }} <small class="muted">{{ rows | length + extra | length }}</small></h2></summary>
       <ul class="job-list">
-        {% for e in rows %}
-        <li class="sl-row">
-          <div class="sl-main">
-            <div class="job-title"><a href="/jobs/{{ e.job_id }}" hx-get="/jobs/{{ e.job_id }}" hx-target="#detail" hx-push-url="false">{{ e.title }}</a></div>
-            <div class="job-sub">{{ e.company }}{% if e.where %} · {{ e.where }}{% endif %}{% if e.salary %} · {{ e.salary }}{% endif %}{% if e.posted_at %} · {{ e.posted_at | ago }}{% endif %}</div>
-            <div class="sl-scores">
-              <span title="Recruiter screen">Rec <b>{{ e.rec }}</b></span>
-              <span title="Hiring manager">HM <b>{{ e.hm }}</b></span>
-              <span title="Your want">Want <b>{{ e.want }}</b></span>
-              <span class="muted" title="Rec × HM × Want / 10,000">priority {{ e.priority }}</span>
-            </div>
-            <p class="sl-why">{{ e.why }}</p>
-            {% if e.risk %}<p class="sl-risk"><span class="tag warn">Watch out</span> {{ e.risk }}</p>{% endif %}
-            {% if e.start_cv %}<p class="muted sl-cv">Start from: {{ e.start_cv }}</p>{% endif %}
-          </div>
-          <div class="sl-side">
-            {% include "_label.html" %}
-            {% if e.apply_url %}<a class="btn small" href="{{ e.apply_url }}" target="_blank" rel="noopener">Apply ↗</a>{% endif %}
-          </div>
-        </li>
-        {% endfor %}
+        {% for e in rows %}{% include "_sl_row.html" %}{% endfor %}
       </ul>
+      {% if extra %}
+      <details class="sl-more">
+        <summary class="muted">{{ extra | length }} more from companies already listed above</summary>
+        <ul class="job-list">{% for e in extra %}{% include "_sl_row.html" %}{% endfor %}</ul>
+      </details>
+      {% endif %}
     </details>
     {% else %}
     <p class="muted empty">Nothing here{{ ' — everything is labelled' if unlabelled }}.</p>

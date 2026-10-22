@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from ..classify import COUNTRIES, ROLES, SENIORITY
 from ..config import INTERVALS, STALE_DAYS
 from ..lang import NAMES
-from ..match import VERDICTS
+from ..match import SHOWN, VERDICTS
 from ..normalize import ago_iso, now_iso
 
 SOURCE_GROUPS = [
@@ -182,20 +182,47 @@ def boards_summary(conn):
     return [dict(r) for r in by_ats], [dict(r) for r in failing]
 
 
-def shortlist(conn, unlabelled: bool = False, verdict: str = "") -> list[tuple[str, str, list[dict]]]:
+COMPANY_CAP = 3
+
+
+def shortlist(conn, unlabelled: bool = False, verdict: str = "", track: str = "") -> list[tuple[str, str, list, list]]:
+    """Groups of (verdict, name, top rows, extra rows); extra rows are a company's 4th job onwards in that group."""
     where, args = [], []
     if unlabelled:
         where.append("m.label IS NULL")
-    if verdict:
-        where.append("m.verdict = ?")
-        args.append(verdict)
+    for col, value in (("m.verdict", verdict), ("m.track", track)):
+        if value:
+            where.append(f"{col} = ?")
+            args.append(value)
     rows = conn.execute(
         "SELECT m.*, j.title, j.locations, j.remote, j.remote_scope, j.salary, j.posted_at, j.apply_url, "
         "c.name AS company FROM match_evaluations m JOIN jobs j ON j.id = m.job_id "
         "JOIN companies c ON c.id = j.company_id " + ("WHERE " + " AND ".join(where) if where else "")
-        + " ORDER BY m.priority DESC", args).fetchall()
-    rows = [{**dict(r), "where": _where_label(r)} for r in rows]
-    return [(k, name, [r for r in rows if r["verdict"] == k]) for k, name in VERDICTS.items()]
+        + " ORDER BY m.priority IS NULL, m.priority DESC, m.job_id DESC", args).fetchall()
+    rows = [{**dict(r), "where": _where_label(r), "notes": json.loads(r["result"]) if r["result"] else None}
+            for r in rows]
+    groups = []
+    for k, name in VERDICTS.items():
+        seen: dict[str, int] = {}
+        top, extra = [], []
+        for r in (r for r in rows if r["verdict"] == k):
+            seen[r["company"]] = seen.get(r["company"], 0) + 1
+            (top if seen[r["company"]] <= COMPANY_CAP else extra).append(r)
+        groups.append((k, name, top, extra))
+    return groups
+
+
+def tracks(conn) -> list[str]:
+    return [r[0] for r in conn.execute("SELECT DISTINCT track FROM match_evaluations WHERE track IS NOT NULL "
+                                       "ORDER BY track")]
+
+
+def agreement(conn) -> tuple[int, int]:
+    """How many of David's labels DeepSeek's verdicts agree with: Yes/Maybe vs a shown verdict, No vs skip."""
+    rows = conn.execute("SELECT label, verdict FROM match_evaluations WHERE label IS NOT NULL AND model IS NOT NULL "
+                        "AND verdict != 'needs_ad'").fetchall()
+    agree = sum((r["label"] in ("Y", "M")) == (r["verdict"] in SHOWN) for r in rows)
+    return agree, len(rows)
 
 
 def _where_label(r) -> str:
@@ -225,5 +252,6 @@ def header_stats(conn, now: str | None = None) -> dict:
         "source_errors": one("SELECT COUNT(*) FROM source_runs WHERE id IN "
                              "(SELECT MAX(id) FROM source_runs GROUP BY source) AND status = 'error'"),
         "last_poll": one("SELECT MAX(finished_at) FROM source_runs"),
-        "unlabelled": one("SELECT COUNT(*) FROM match_evaluations WHERE label IS NULL AND verdict != 'skip'"),
+        "unlabelled": one("SELECT COUNT(*) FROM match_evaluations WHERE label IS NULL AND verdict IN "
+                          f"({', '.join(repr(v) for v in SHOWN)})"),
     }

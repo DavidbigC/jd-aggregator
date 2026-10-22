@@ -104,7 +104,30 @@ CREATE TABLE IF NOT EXISTS match_evaluations (
   label TEXT,
   label_note TEXT,
   labelled_at TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  reason TEXT,
+  model TEXT,
+  prompt_version TEXT,
+  profile_hash TEXT,
+  prefs_version INTEGER,
+  description_hash TEXT,
+  result TEXT
+);
+CREATE TABLE IF NOT EXISTS match_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  started_at TEXT NOT NULL,
+  finished_at TEXT,
+  status TEXT NOT NULL,
+  model TEXT NOT NULL,
+  prefs_version INTEGER,
+  planned INTEGER NOT NULL DEFAULT 0,
+  evaluated INTEGER NOT NULL DEFAULT 0,
+  failed INTEGER NOT NULL DEFAULT 0,
+  input_hit INTEGER NOT NULL DEFAULT 0,
+  input_miss INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cost_usd REAL NOT NULL DEFAULT 0,
+  error TEXT
 );
 CREATE TABLE IF NOT EXISTS preferences (
   version INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,6 +158,13 @@ ADDED_COLUMNS = [
     ("jobs", "seniority", "TEXT"),
     ("jobs", "countries", "TEXT NOT NULL DEFAULT '[]'"),
     ("jobs", "remote_scope", "TEXT"),
+    ("match_evaluations", "reason", "TEXT"),
+    ("match_evaluations", "model", "TEXT"),
+    ("match_evaluations", "prompt_version", "TEXT"),
+    ("match_evaluations", "profile_hash", "TEXT"),
+    ("match_evaluations", "prefs_version", "INTEGER"),
+    ("match_evaluations", "description_hash", "TEXT"),
+    ("match_evaluations", "result", "TEXT"),
 ]
 
 

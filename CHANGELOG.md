@@ -27,3 +27,4 @@
 - 2026-10-22 feat: load a DeepSeek API key in Settings and set job preferences by chatting with DeepSeek
 - 2026-10-22 fix: retry and log failed DeepSeek chat replies, and keep the typed message after an error
 - 2026-10-22 fix: send DeepSeek its past chat turns as JSON so JSON mode stops returning blank replies
+- 2026-10-22 feat: score the shortlist with DeepSeek from a Run matcher button, with a preference-driven prefilter and cost confirmation

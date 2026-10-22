@@ -1,6 +1,6 @@
 # 0005: DeepSeek as Job Radar's LLM, key in the Keychain, preferences in SQLite
 
-Date: 2026-10-22. Status: accepted (Phases A–B built; the matcher in Phase C will use the same client).
+Date: 2026-10-22. Status: accepted (Phases A–B built first; the matcher was added in Phase C, see the last section).
 
 ## Problem
 Job Radar needs an LLM for two jobs:
@@ -45,3 +45,24 @@ David wants all LLM work done inside the app, by a provider whose key they load 
 - **Rolling back.** Preferences are versioned, so a bad change can be undone by applying an older version (a UI for that is not built yet).
 - **Re-scoring.** The matcher can stamp each result with the preferences version and re-score jobs when it changes.
 - **Claude's role.** Claude does not score jobs. It reviews DeepSeek's chat proposals and, later, its scores, and its feedback lands in the web app.
+
+## Addendum: the matcher (Phase C)
+
+**Problem.** Score the prefiltered jobs (about 130 in a 14-day window) against David's profile and preferences, inside the app, with David starting each run.
+
+**Options considered.**
+1. A cheap triage model, then a deep model (the earlier Claude plan: Haiku then Opus).
+2. One stage on `deepseek-v4-pro` with thinking.
+3. One stage on `deepseek-flash`.
+
+**Decision.**
+- **One stage on `deepseek-v4-pro`, thinking on, JSON mode.** At about $0.01–0.02 per job, a triage stage saves little and risks dropping good jobs. Flash was too unreliable in JSON mode during the preferences chat.
+- **The verdict is computed in code** from DeepSeek's three scores and quoted knockouts, so a model change cannot quietly move the thresholds.
+- **The profile and prompt are files in `seeds/`**, sent first and byte-stable so the prefix cache covers them. Every row is stamped with the model, the prompt and profile hashes and the preferences version; a change to any of them, or to the ad, makes the job due for re-scoring.
+- **Runs start from the Shortlist page** and show the cost before anything is spent. Runs are a background thread in the server process, like manual source polls.
+
+**Consequences.**
+- **More data leaves the machine:** the candidate profile and each prefiltered job ad go to DeepSeek. The profile has no contact details, location, account IDs or trading profits.
+- **Speed and cost:** about 50 seconds and roughly 3,600 output tokens per job (mostly reasoning). A full run of about 130 jobs takes about 15 minutes at 8 jobs at a time, and costs about $1.30 off-peak or $2.70 at peak.
+- **Preference changes re-score everything.** Any change to the preferences makes every job due again; the confirm step shows the count and cost first.
+- **Restarts:** a server restart during a run leaves it marked interrupted. Pressing Run matcher again picks up the jobs that were not scored.
