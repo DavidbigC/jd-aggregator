@@ -31,3 +31,12 @@ def test_consider_board(http):
     ps = consider.collect_board(http, "pantera")
     _valid(ps, "consider:pantera")
     assert len(ps) == 5
+
+
+def test_getro_takes_company_from_mismatched_linkedin_url():
+    from jobradar.collectors.getro import _company
+    url = "https://www.linkedin.com/jobs/view/training-specialist-welding-fx-at-hadrian-4476623474"
+    assert _company("StreamingFast", url) == "Hadrian"
+    assert _company("Jump Trading", "https://www.linkedin.com/jobs/view/quant-at-jump-trading-123") == "Jump Trading"
+    assert _company("Binance", "https://www.linkedin.com/jobs/view/analyst-at-binance-com-123") == "Binance"
+    assert _company("Acme", "https://jobs.ashbyhq.com/acme/1") == "Acme"

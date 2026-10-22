@@ -1,3 +1,5 @@
+import re
+
 from ..models import Posting
 from ..normalize import to_iso
 from .base import gather, salary_text
@@ -29,6 +31,20 @@ NETWORKS = {
 }
 
 
+_LINKEDIN_AT = re.compile(r"linkedin\.com/jobs/view/.+-at-([a-z0-9-]+?)-\d+/?$")
+
+
+# Some networks file LinkedIn-sourced jobs under the wrong portfolio company (e.g. Hadrian jobs as StreamingFast);
+# the company slug in the LinkedIn URL is the reliable one.
+def _company(org_name: str | None, url: str | None) -> str:
+    m = _LINKEDIN_AT.search(url or "")
+    if not m:
+        return org_name or "Unknown"
+    slug = m.group(1).split("-")
+    org = {w for w in re.findall(r"[a-z0-9]+", (org_name or "").lower()) if len(w) >= 3}
+    return org_name if org_name and org & set(slug) else " ".join(w.capitalize() for w in slug)
+
+
 def _dollars(cents):
     return cents / 100 if cents else None
 
@@ -44,7 +60,7 @@ def collect_network(http, name: str) -> list[Posting]:
             org = j.get("organization") or {}
             page_url = f"https://{host}/companies/{org.get('slug')}/jobs/{j.get('slug')}"
             out.append(Posting(
-                source=f"getro:{name}", source_job_id=str(j["id"]), company=org.get("name") or "Unknown",
+                source=f"getro:{name}", source_job_id=str(j["id"]), company=_company(org.get("name"), j.get("url")),
                 title=j["title"], url=j.get("url") or page_url, detail_url=page_url,
                 locations=j.get("locations") or [], remote=(j.get("work_mode") == "remote") or None,
                 posted_at=to_iso(j.get("created_at")),
