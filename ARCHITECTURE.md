@@ -39,7 +39,8 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 
 ## DeepSeek, Settings and Preferences (keystore.py, deepseek.py, prefs.py)
 - **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jobradar.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
-- **Client.** `deepseek.py` makes plain httpx calls: `balance()`, and `chat_json()`, which uses JSON mode with thinking off by default and retries once on an empty reply.
+- **Client.** `deepseek.py` makes plain httpx calls: `balance()`, and `chat_json()`, which uses JSON mode with thinking off by default. It retries once on a dropped connection or a reply that isn't a JSON object, and logs every call (model, seconds, tokens, finish reason) and every failure.
+- **Logs.** `jobradar serve` logs at INFO to stderr, which goes to `data/web.log` (under launchd, or when started by hand with that redirect). A failed chat turn logs its traceback and the first 300 characters of David's message, and the page keeps the typed text so it can be resent.
 - **Preferences chat.** `/preferences` shows what the matcher knows next to a chat with `deepseek-flash`. Each turn sends:
   - the system prompt from `seeds/prefs_assistant_prompt.md`;
   - the field list;

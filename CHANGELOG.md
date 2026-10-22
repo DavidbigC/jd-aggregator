@@ -25,3 +25,4 @@
 - 2026-10-22 fix: take getro company names from LinkedIn URLs when the network mislabels them
 - 2026-10-22 feat: add a Shortlist page to review matched jobs and label them Yes / Maybe / No
 - 2026-10-22 feat: load a DeepSeek API key in Settings and set job preferences by chatting with DeepSeek
+- 2026-10-22 fix: retry and log failed DeepSeek chat replies, and keep the typed message after an error

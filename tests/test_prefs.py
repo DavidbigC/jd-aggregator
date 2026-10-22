@@ -98,3 +98,16 @@ def test_chat_disabled_without_key(tmp_path, monkeypatch):
     page = client.get("/preferences")
     assert "Add your DeepSeek API key" in page.text and 'name="text"' not in page.text
     assert "Settings first" in client.post("/preferences/chat", data={"text": "hi"}).text
+
+
+def test_failed_turn_is_logged_and_keeps_the_typed_text(chat_client, monkeypatch, caplog):
+    client, db, _ = chat_client
+
+    def broken(key, messages, **kw):
+        raise ValueError("DeepSeek failed 2 times; last problem: reply was not a json object")
+
+    monkeypatch.setattr(deepseek, "chat_json", broken)
+    r = client.post("/preferences/chat", data={"text": "BI is a maybe"})
+    assert r.headers["X-Chat-Error"] == "1" and "still in the box" in r.text
+    assert "'BI is a maybe'" in caplog.text and "not a json object" in caplog.text
+    assert prefs.messages(connect(db)) == []

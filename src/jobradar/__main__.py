@@ -47,9 +47,12 @@ def main() -> None:
         rows = json.loads(path.read_text())
         print(f"evaluations imported: {import_results(conn, rows, run=args.run or path.stem)} of {len(rows)}")
     else:
+        import logging
+
         import uvicorn
 
         from .web.app import create_app
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
         uvicorn.run(create_app(DB_PATH), host="127.0.0.1", port=args.port)
 
 

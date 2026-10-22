@@ -1,4 +1,5 @@
 import json
+import logging
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,6 +23,7 @@ from ..runner import SOURCES, poll
 from . import queries
 
 HERE = Path(__file__).parent
+log = logging.getLogger(__name__)
 PAGE = 50
 
 
@@ -217,12 +219,14 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             try:
                 new = await run_in_threadpool(chat_turn, key, text)
             except httpx.HTTPStatusError as e:
+                log.exception("preferences chat failed; message was %r", text[:300])
                 error = f"DeepSeek returned an error ({e.response.status_code}). Check your key and balance in Settings."
             except (httpx.HTTPError, ValueError):
-                error = "DeepSeek didn't answer properly. Please send that again."
+                log.exception("preferences chat failed; message was %r", text[:300])
+                error = "DeepSeek didn't answer properly. Your message is still in the box; please send it again."
         if error:
             return templates.TemplateResponse(request, "_chat_msg.html", {"m": {
-                "id": "error", "role": "assistant error", "content": error}})
+                "id": "error", "role": "assistant error", "content": error}}, headers={"X-Chat-Error": "1"})
         return HTMLResponse("".join(templates.get_template("_chat_msg.html").render(m=_msg(m)) for m in new))
 
     def proposal_response(request: Request, msg_id: int, ok: bool):

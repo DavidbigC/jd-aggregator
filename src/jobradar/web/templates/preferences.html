@@ -16,7 +16,7 @@
     {% if has_key %}
     <form class="chat-form" hx-post="/preferences/chat" hx-target="#chat-log" hx-swap="beforeend" hx-indicator="#typing"
           hx-disabled-elt="find button"
-          hx-on::after-request="if (event.detail.successful) this.reset(); const l = document.getElementById('chat-log'); l.scrollTop = l.scrollHeight">
+          hx-on::after-request="if (event.detail.successful && !event.detail.xhr.getResponseHeader('X-Chat-Error')) this.reset(); const l = document.getElementById('chat-log'); l.scrollTop = l.scrollHeight">
       <textarea name="text" rows="2" required placeholder="Tell DeepSeek what you want, e.g. &quot;UK hours only, no visa needed&quot;" aria-label="Message"
                 onkeydown="if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
       <button>Send</button>
