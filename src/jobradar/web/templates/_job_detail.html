@@ -16,6 +16,7 @@
     </tr>
     {% endfor %}
   </table>
+  {% include "_cv.html" %}
   {% if job.description %}<h3>Description</h3><div class="desc">{{ job.description }}</div>
   {% else %}<p class="muted">No description from these sources — open the posting.</p>{% endif %}
 </article>

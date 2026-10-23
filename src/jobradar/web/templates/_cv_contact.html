@@ -1,0 +1,9 @@
+<section id="cv-contact" class="card">
+  <h2>CV contact line</h2>
+  <p class="muted">Shown under your name on every tailored CV, for example “+44 7700 900000 · you@example.com · City, Country”. It is kept only in this app's local database and is never sent to DeepSeek.</p>
+  <form class="key-form" hx-post="/settings/cv-contact" hx-target="#cv-contact" hx-swap="outerHTML">
+    <input name="contact" value="{{ contact }}" placeholder="Phone · email · city" maxlength="200" autocomplete="off" aria-label="CV contact line">
+    <button>Save</button>
+  </form>
+  {% if saved %}<p class="card-msg"><span class="ok">Saved</span>{{ ' — CVs now show no contact line' if not contact }}</p>{% endif %}
+</section>

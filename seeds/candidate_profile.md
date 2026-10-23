@@ -8,14 +8,14 @@ Source: David's cleaned master CV (devmaster-cv, audited 2026-10-21). Pronouns: 
 - For engineering roles, judge coding depth on the 2021–2025 hands-on work only.
 
 ## In one paragraph
-Crypto data analyst with product and growth analytics experience at three crypto companies (FLOKI, Dragon Race, CARV), hands-on on-chain data work from 2021 to 2025 (Dune, Flipside, Allium, PostgreSQL warehouses for Sui and BNB Chain), and an MSc in research methods and statistics. Since 2026 David has also run a one-person cross-venue crypto trading business, setting strategy and risk and directing AI agents to build the systems. Main target: data analyst roles at crypto companies (product/data analytics, on-chain analytics, BI and reporting, token and market research). Product roles are a secondary target.
+Crypto data analyst with product and growth analytics experience at three crypto companies (FLOKI, Dragon Race, CARV), hands-on on-chain data work from 2021 to 2025 (Dune, Flipside, Allium, PostgreSQL warehouses for Sui and BNB Chain), and an MSc in research methods and statistics. Since May 2026 (after leaving FLOKI in April) David works full-time as an independent on-chain market maker and arbitrageur, setting strategy and risk and directing AI agents to build the systems; the on-chain data work continues. Never call David a "trader". Main target: data analyst roles at crypto companies (product/data analytics, on-chain analytics, BI and reporting, token and market research). Product roles are a secondary target.
 
 ## Facts a screener checks
 - **Titles and dates.**
-  - FLOKI: Data Analyst, Dec 2024 – present.
+  - FLOKI: Data Analyst, Dec 2024 – Apr 2026.
   - Elfin Metaverse (Dragon Race): Operation & Data Analyst, May 2024 – Mar 2025 (overlaps with FLOKI).
   - CARV (GEMI Foundation): Community Lead & Business Development, May 2022 – Sep 2023.
-  - Independent quant / DeFi / product builder: 2021 – present (hands-on until 2025, AI-directed from 2026).
+  - Independent on-chain market maker & arbitrageur: 2021 – present (alongside roles until Apr 2026, full-time since May 2026; hands-on until 2025, AI-directed from 2026).
 - **Years.** About 2.5 years in titled data-analyst roles (2024–2026); 5+ years working in crypto overall (2021–2026); about 1.5 years in a community / BD role with analytics duties.
 - **No product-manager title** and **no software-engineer title**, ever.
 - **Education.**
@@ -27,7 +27,7 @@ Crypto data analyst with product and growth analytics experience at three crypto
 ## Track evidence
 
 ### Analyst: product / data analytics [hands-on]
-- FLOKI (Dec 2024 – present): dashboards for product and protocol monitoring; tracking for the Trading Bot, Floki ID and the TokenFi Launchpad; owned the product database behind the BI; forecasting of trading volume, DAU and fee trends; campaign and feature evaluation; event-level data capture planning with engineers; trading-bot behaviour analysis feeding product decisions.
+- FLOKI (Dec 2024 – Apr 2026): dashboards for product and protocol monitoring; tracking for the Trading Bot, Floki ID and the TokenFi Launchpad; owned the product database behind the BI; forecasting of trading volume, DAU and fee trends; campaign and feature evaluation; event-level data capture planning with engineers; trading-bot behaviour analysis feeding product decisions.
 - FLOKI company Streamlit dashboards: 102 commits (Apr 2025 – Mar 2026) covering the Trading Bot, the Web Bot trading terminal, Staking (APR, user analytics, rewards by pool), Locker, GenAI NFTs and a Smart Contract Auditor; SQL over the product database; Docker/Helm deployment with CI. Built hands-on through 2025.
 - Dragon Race (May 2024 – Mar 2025): product and growth analytics on on-chain and off-chain user behaviour; real-time Tableau dashboards (DAU/MAU, engagement, campaigns) and Streamlit dashboards; led the data strategy for the opBNB chain launch; token and points incentive modelling with Python agent-based simulations; BattlePass launch ownership; retention analysis.
 - Outcomes at Dragon Race: doubled monthly active interactions, making it the #1 most-used dApp on Manta Network; 1M+ unique active wallets in the first week of the opBNB launch (#3 on opBNB); 25% better next-month retention; 90% less manual reporting; 10,000+ BattlePass participants in under a month.

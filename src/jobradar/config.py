@@ -7,6 +7,8 @@ DB_PATH = DATA_DIR / "jobradar.db"
 SEED_CSV = ROOT / "seeds" / "boards.csv"
 SECTORS_CSV = ROOT / "seeds" / "company_sectors.csv"
 PREFS_PROMPT = ROOT / "seeds" / "prefs_assistant_prompt.md"
+# The audited master CV that tailored CVs are written from (docs/decisions/0006).
+CV_SOURCE_DIR = Path(os.environ.get("JOBRADAR_CV_DIR", Path.home() / "job_related" / "devmaster-cv"))
 
 STALE_DAYS = 10
 MATCH_WINDOW_DAYS = 45

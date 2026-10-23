@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from jobradar import deepseek, enrich, keystore, prefs
 from jobradar.db import connect
 from jobradar.ingest import ingest
-from jobradar.match import evaluate, prefilter, set_label
+from jobradar.match import evaluate, import_results, prefilter, set_label
 from jobradar.match import runner as matcher
 from jobradar.models import Posting
 from jobradar.normalize import now_iso
@@ -74,13 +74,36 @@ def _result(**kw):
     ({"actually_remote": False}, ("skip", "knockout")),
     ({"scores": {"recruiter": 90, "hiring_manager": 90, "want": 40}}, ("skip", "low want")),
     ({"track": "backend", "scores": {"recruiter": 50, "hiring_manager": 50, "want": 70}}, ("stretch", None)),
-    ({"track": "quant", "scores": {"recruiter": 40, "hiring_manager": 50, "want": 70}}, ("skip", "too far")),
+    ({"track": "quant", "scores": {"recruiter": 20, "hiring_manager": 40, "want": 70}}, ("stretch", None)),
+    ({"track": "quant", "scores": {"recruiter": 60, "hiring_manager": 35, "want": 70}}, ("skip", "too far")),
     ({"scores": {"recruiter": 71, "hiring_manager": 72, "want": 58}}, ("tailor_then_apply", None)),
-    ({"scores": {"recruiter": 30, "hiring_manager": 40, "want": 75}}, ("stretch", None)),
-    ({"scores": {"recruiter": 30, "hiring_manager": 40, "want": 60}}, ("skip", "weak fit")),
+    ({"scores": {"recruiter": 45, "hiring_manager": 70, "want": 90}}, ("tailor_then_apply", None)),
+    ({"scores": {"recruiter": 20, "hiring_manager": 45, "want": 60}}, ("tailor_then_apply", None)),
+    ({"scores": {"recruiter": 55, "hiring_manager": 50, "want": 45}}, ("tailor_then_apply", None)),
+    ({"scores": {"recruiter": 30, "hiring_manager": 40, "want": 60}}, ("stretch", None)),
+    ({"scores": {"recruiter": 30, "hiring_manager": 30, "want": 75}}, ("skip", "weak fit")),
+    ({"scores": {"recruiter": 70, "hiring_manager": 40, "want": 50}}, ("skip", "weak fit")),
 ])
 def test_verdict_rules(kw, expected):
     assert evaluate.verdict(evaluate.clean(_result(**kw))) == expected
+
+
+def test_rescore_rederives_verdicts_and_priority_without_deepseek(conn):
+    ingest(conn, [Posting(source="jobstash", source_job_id=str(i), company="Acme", title=t)
+                  for i, t in enumerate(["Analyst", "Hand scored", "Short ad"])])
+    a, h, s = (r[0] for r in conn.execute("SELECT id FROM jobs ORDER BY id"))
+    low_rec = evaluate.clean(_result(scores={"recruiter": 30, "hiring_manager": 40, "want": 60}))
+    import_results(conn, [
+        {"job_id": a, "verdict": "skip", "reason": "weak fit", "rec": 30, "hm": 40, "want": 60,
+         "result": json.dumps(low_rec)},
+        {"job_id": h, "verdict": "apply_now", "rec": 80, "hm": 70, "want": 90},
+        {"job_id": s, "verdict": "needs_ad", "rec": 0, "hm": 0, "want": 0, "result": json.dumps(low_rec)}], run="t")
+    conn.execute("UPDATE match_evaluations SET priority = 1, label = 'Y'")
+    assert evaluate.rescore(conn) == {"skip → stretch": 1}
+    rows = {r["job_id"]: r for r in conn.execute("SELECT * FROM match_evaluations")}
+    assert (rows[a]["verdict"], rows[a]["reason"], rows[a]["label"]) == ("stretch", None, "Y")
+    assert rows[h]["verdict"] == "apply_now" and rows[h]["priority"] == 81
+    assert rows[s]["verdict"] == "needs_ad"
 
 
 def test_clean_drops_bad_values_and_unquoted_knockouts():

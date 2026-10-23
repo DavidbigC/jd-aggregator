@@ -4,6 +4,7 @@ import re
 
 from .. import deepseek
 from ..config import ROOT
+from . import priority
 
 MODEL = "deepseek-v4-pro"
 PROFILE = ROOT / "seeds" / "candidate_profile.md"
@@ -80,21 +81,41 @@ def clean(data: dict) -> dict:
 
 
 def verdict(r: dict) -> tuple[str, str | None]:
-    """The verdict rules from the matcher spec, applied in order."""
+    """The verdict rules, applied in order. Want leads: a job David wants and could do is shown even when the
+    recruiter score is low, because the tailored CV is what gets David past the screen."""
     a, b, c = (r["scores"][k] for k in SCORES)
     if r["knockouts"] or not r["actually_remote"]:
         return "skip", "knockout"
     if c < 45:
         return "skip", "low want"
     if r["track"] in ("backend", "quant"):
-        return ("stretch", None) if a >= 45 and b >= 45 else ("skip", "too far")
-    if a >= 65 and b >= 60 and c >= 60:
+        return ("stretch", None) if b >= 40 else ("skip", "too far")
+    if c >= 65 and b >= 60 and a >= 50:
         return "apply_now", None
-    if a >= 45 and b >= 50:
+    if (c >= 55 and b >= 45) or (a >= 45 and b >= 50):
         return "tailor_then_apply", None
-    if c >= 70:
+    if c >= 55 and b >= 35:
         return "stretch", None
     return "skip", "weak fit"
+
+
+def rescore(conn) -> dict[str, int]:
+    """Re-derive every verdict and priority from the stored scores, without calling DeepSeek. Labels are kept."""
+    moved: dict[str, int] = {}
+    for row in conn.execute("SELECT job_id, verdict, rec, hm, want, result FROM match_evaluations "
+                            "WHERE rec IS NOT NULL").fetchall():
+        v, reason = row["verdict"], None
+        if row["result"] and v != "needs_ad":
+            v, reason = verdict(json.loads(row["result"]))
+            if v != row["verdict"]:
+                key = f"{row['verdict']} → {v}"
+                moved[key] = moved.get(key, 0) + 1
+            conn.execute("UPDATE match_evaluations SET verdict = ?, reason = ? WHERE job_id = ?",
+                         (v, reason, row["job_id"]))
+        conn.execute("UPDATE match_evaluations SET priority = ? WHERE job_id = ?",
+                     (priority(row["rec"], row["hm"], row["want"]), row["job_id"]))
+    conn.commit()
+    return moved
 
 
 def evaluate(key: str, job: dict, prefs: dict, stamp: dict) -> tuple[dict, dict]:

@@ -30,3 +30,6 @@
 - 2026-10-22 feat: score the shortlist with DeepSeek from a Run matcher button, with a preference-driven prefilter and cost confirmation
 - 2026-10-22 fix: stop the matcher hiding jobs over years or skill gaps, catch US-only and office-city ads, and show how-to-apply notes
 - 2026-10-22 fix: keep region-limited remote jobs (flag, don't knock out) and stop backend, ML-research and marketing titles reaching DeepSeek
+- 2026-10-22 feat: tailor a CV for each job with DeepSeek (writer, recruiter review, revision) and save it as a PDF in the devmaster-cv layout
+- 2026-10-23 feat: make tailored CVs sell to the screening recruiter, check repeats, hedges, stale FLOKI dates and length in code, and score the final CV, with one repair round when the final still has an invented claim or a must-fix
+- 2026-10-23 feat: sort and filter the shortlist mostly by Want instead of the recruiter score, with a free `match rescore`

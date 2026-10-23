@@ -143,6 +143,29 @@ CREATE TABLE IF NOT EXISTS pref_messages (
   status TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS tailored_cvs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  job_id INTEGER NOT NULL REFERENCES jobs(id),
+  created_at TEXT NOT NULL,
+  finished_at TEXT,
+  status TEXT NOT NULL,
+  stage TEXT,
+  model TEXT NOT NULL,
+  prompt_version TEXT,
+  sources_hash TEXT,
+  draft TEXT,
+  review TEXT,
+  final TEXT,
+  final_review TEXT,
+  score INTEGER,
+  cost_usd REAL NOT NULL DEFAULT 0,
+  error TEXT
+);
+CREATE INDEX IF NOT EXISTS tailored_cvs_job ON tailored_cvs (job_id, id);
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 CREATE VIRTUAL TABLE IF NOT EXISTS jobs_fts USING fts5 (title, company, description, tokenize = 'trigram');
 """
 
@@ -165,6 +188,7 @@ ADDED_COLUMNS = [
     ("match_evaluations", "prefs_version", "INTEGER"),
     ("match_evaluations", "description_hash", "TEXT"),
     ("match_evaluations", "result", "TEXT"),
+    ("tailored_cvs", "final_review", "TEXT"),
 ]
 
 

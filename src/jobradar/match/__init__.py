@@ -8,6 +8,11 @@ FIELDS = ("verdict", "track", "rec", "hm", "want", "why", "risk", "start_cv", "r
           "profile_hash", "prefs_version", "description_hash", "result")
 
 
+def priority(rec: int, hm: int, want: int) -> int:
+    """Weighted geometric mean, 0–100: Want counts most, Rec least, because the tailored CV is how Rec gets lifted."""
+    return round(rec ** 0.15 * hm ** 0.35 * want ** 0.5)
+
+
 def import_results(conn, rows: list[dict], run: str) -> int:
     """Upsert evaluations; David's label fields are never touched."""
     known = {r[0] for r in conn.execute("SELECT id FROM jobs")}
@@ -15,13 +20,13 @@ def import_results(conn, rows: list[dict], run: str) -> int:
     for r in rows:
         if r["job_id"] not in known:
             continue
-        priority = round(r["rec"] * r["hm"] * r["want"] / 10000) if r.get("rec") is not None else None
         conn.execute(
             f"INSERT INTO match_evaluations (job_id, run, priority, created_at, {', '.join(FIELDS)}) "
             f"VALUES (?, ?, ?, ?, {', '.join('?' * len(FIELDS))}) "
             f"ON CONFLICT (job_id) DO UPDATE SET run = excluded.run, priority = excluded.priority, "
             f"created_at = excluded.created_at, {', '.join(f'{c} = excluded.{c}' for c in FIELDS)}",
-            (r["job_id"], run, priority, now, *(r.get(c) for c in FIELDS)),
+            (r["job_id"], run, priority(r["rec"], r["hm"], r["want"]) if r.get("rec") is not None else None, now,
+             *(r.get(c) for c in FIELDS)),
         )
         n += 1
     conn.commit()

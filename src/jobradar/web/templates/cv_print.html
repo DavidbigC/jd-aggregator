@@ -1,0 +1,61 @@
+{% set cv = view.cv.final %}{% set h = headings %}<!doctype html>
+<html lang="{{ cv.language }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ view.filename }}</title>
+  <link rel="stylesheet" href="/static/resume.css">
+  <style>
+    @media screen {
+      html { background: {{ '#fff' if embed else '#e9e9e6' }}; }
+      body { max-width: 210mm; margin: {{ '0 auto' if embed else '0 auto 32px' }}; padding: 16px 22px; {{ '' if embed else 'box-shadow: 0 2px 12px rgba(0,0,0,.12);' }} }
+    }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; max-width: 210mm; margin: 16px auto 12px;
+               font: 13px -apple-system, "Helvetica Neue", sans-serif; color: #444; }
+    .toolbar button { padding: 6px 14px; border: 1px solid #0f766e; border-radius: 6px; background: #0f766e; color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    @media print { .toolbar { display: none; } }
+  </style>
+</head>
+<body>
+{% if not embed %}
+<div class="toolbar">
+  <button type="button" onclick="window.print()">Print / Save as PDF</button>
+  <span>In the print dialog choose <b>Save as PDF</b>, paper <b>A4</b>, and turn off <b>Headers and footers</b>. The file name is ready: “{{ view.filename }}”.</span>
+</div>
+{% endif %}
+<div class="markdown-body">
+<h1>{{ name }}</h1>
+{% if cv.headline %}<p><strong>{{ cv.headline }}</strong></p>{% endif %}
+<p>{% if view.contact %}{{ view.contact }}<br>{% endif %}{% for label, url in view.links %}<a href="{{ url }}">{{ label }}</a>{{ ' | ' if not loop.last }}{% endfor %}</p>
+
+<h2>{{ h[0] }}</h2>
+<p>{{ cv.summary }}</p>
+
+<h2>{{ h[1] }}</h2>
+{% for g in cv.skills %}<p><strong>{{ g.group }}:</strong> {{ g['items'] | join(', ') }}</p>
+{% endfor %}
+
+<h2>{{ h[2] }}</h2>
+{% for e in cv.experience %}
+<h3>{{ [e.org, e.title, e.dates] | select | join(' | ') }}</h3>
+<ul>{% for b in e.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+{% endfor %}
+
+{% if cv.projects %}
+<h2>{{ h[3] }}</h2>
+{% for p in cv.projects %}
+<h3>{% if p.link %}<a href="{{ p.link }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}{% if p.dates %} | {{ p.dates }}{% endif %}</h3>
+<ul>{% for b in p.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+{% endfor %}
+{% endif %}
+
+{% if cv.highlights %}
+<h2>{{ h[4] }}</h2>
+<ul>{% for b in cv.highlights %}<li>{{ b }}</li>{% endfor %}</ul>
+{% endif %}
+
+<h2>{{ h[5] }}</h2>
+{% for e in cv.education %}<p><strong>{{ e.degree }}</strong> — {{ e.school }}{% if e.year %} | {{ e.year }}{% endif %}</p>
+{% endfor %}
+</div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<section id="cv-batch" class="card match-run"{% if cv_running %} hx-get="/shortlist/cv/panel" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {% set n = cv_todo | length %}
+  {% if cv_running %}
+  <p><b>Writing {{ cv_running }} tailored CV{{ 's' if cv_running != 1 }}…</b> About 5–8 minutes each, 4 at a time. Open a job to see its CV when it's ready.</p>
+  {% elif confirm and n %}
+  <p>Tailor a CV for each of the <b>{{ n }}</b> shortlisted job{{ 's' if n != 1 }} without one. Each CV is written, reviewed by a recruiter pass and revised: about <b>${{ '%.2f' | format(cv_est * n) }}</b> in total{{ ' at the current peak price' if peak }}.</p>
+  <div class="card-actions">
+    <button class="small" hx-post="/shortlist/cv/start" hx-target="#cv-batch" hx-swap="outerHTML" hx-disabled-elt="this">Tailor {{ n }} CV{{ 's' if n != 1 }}</button>
+    <button class="ghost small" hx-get="/shortlist/cv/panel" hx-target="#cv-batch" hx-swap="outerHTML">Cancel</button>
+  </div>
+  {% else %}
+  <div class="run-line">
+    {% if n and has_key %}<button class="small" hx-post="/shortlist/cv" hx-target="#cv-batch" hx-swap="outerHTML">Tailor CVs for {{ n }} shortlisted job{{ 's' if n != 1 }}</button>{% endif %}
+    <span class="muted">{% if cv_ready %}{{ cv_ready }} shortlisted job{{ 's have' if cv_ready != 1 else ' has' }} a tailored CV; open a job to read it.{% elif not n %}No shortlisted jobs yet.{% else %}Tailored CVs: DeepSeek writes one per job from your master CV, a recruiter pass reviews it, then it's revised. You confirm the cost first.{% endif %}</span>
+  </div>
+  {% endif %}
+  {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
+</section>

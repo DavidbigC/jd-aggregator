@@ -19,7 +19,7 @@ def test_import_computes_priority_and_skips_unknown_jobs(conn):
     job_id = _job(conn)
     assert import_results(conn, [_row(job_id), _row(999)], run="manual") == 1
     r = conn.execute("SELECT run, verdict, priority FROM match_evaluations").fetchone()
-    assert tuple(r) == ("manual", "apply_now", 50)
+    assert tuple(r) == ("manual", "apply_now", 81)
 
 
 def test_reimport_updates_scores_but_keeps_label(conn):

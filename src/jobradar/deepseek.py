@@ -21,7 +21,7 @@ def balance(key: str) -> dict:
 
 
 def chat_json(key: str, messages: list[dict], model: str = CHAT_MODEL, thinking: bool = False,
-              max_tokens: int = 2000) -> tuple[dict, dict]:
+              max_tokens: int = 2000, timeout: float = 180) -> tuple[dict, dict]:
     """One JSON-mode completion. Dropped connections and empty or non-JSON replies are retried once."""
     body = {"model": model, "messages": messages, "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
@@ -30,7 +30,7 @@ def chat_json(key: str, messages: list[dict], model: str = CHAT_MODEL, thinking:
     for attempt in range(1, TRIES + 1):
         start = time.monotonic()
         try:
-            r = httpx.post(f"{BASE}/chat/completions", json=body, headers=_auth(key), timeout=180)
+            r = httpx.post(f"{BASE}/chat/completions", json=body, headers=_auth(key), timeout=timeout)
         except httpx.TransportError as e:
             problem = f"{type(e).__name__}: {e}"
             log.warning("%s attempt %d/%d failed after %.1fs: %s", model, attempt, TRIES, time.monotonic() - start, problem)

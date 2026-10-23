@@ -14,9 +14,12 @@ from starlette.concurrency import run_in_threadpool
 
 from .. import deepseek, keystore, prefs
 from ..config import PREFS_PROMPT, SECTORS_CSV
+from ..cv import CONTACT, get_setting, set_setting
+from ..cv import runner as cvs
+from ..cv.tailor import HEADINGS, NAME
 from ..db import connect
 from ..lang import NAMES
-from ..match import VERDICTS, set_label
+from ..match import SHOWN, VERDICTS, set_label
 from ..match import evaluate
 from ..match import runner as matcher
 from ..normalize import ISO
@@ -92,14 +95,46 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
 
     @app.get("/jobs/{job_id}", response_class=HTMLResponse)
     def job(request: Request, job_id: int):
+        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
             j, sightings = queries.job_detail(conn, job_id)
-            stats = queries.header_stats(conn)
-        if not j:
-            raise HTTPException(404)
+            if not j:
+                raise HTTPException(404)
+            stats, cv = queries.header_stats(conn), cvs.view(conn, j)
         name = "_job_detail.html" if partial(request) else "job.html"
         return templates.TemplateResponse(request, name, {"job": j, "sightings": sightings, "stats": stats,
-                                                          "nav": "jobs"})
+                                                          "nav": "jobs", "has_key": bool(key), **cv})
+
+    def cv_section(request: Request, job_id: int, **ctx):
+        key, _ = keystore.get_key()
+        with closing(connect(db_path)) as conn:
+            j, _ = queries.job_detail(conn, job_id)
+            if not j:
+                raise HTTPException(404)
+            cv = cvs.view(conn, j)
+        return templates.TemplateResponse(request, "_cv.html", {"job": j, "has_key": bool(key), **cv, **ctx})
+
+    @app.get("/jobs/{job_id}/cv/section", response_class=HTMLResponse)
+    def cv_status(request: Request, job_id: int):
+        return cv_section(request, job_id)
+
+    @app.post("/jobs/{job_id}/cv", response_class=HTMLResponse)
+    def tailor_cv(request: Request, job_id: int):
+        key, _ = keystore.get_key()
+        if not key:
+            return cv_section(request, job_id, error="Add your DeepSeek API key in Settings first.")
+        cvs.start(db_path, key, [job_id])
+        return cv_section(request, job_id)
+
+    @app.get("/jobs/{job_id}/cv", response_class=HTMLResponse)
+    def cv_page(request: Request, job_id: int, embed: bool = False):
+        with closing(connect(db_path)) as conn:
+            j, _ = queries.job_detail(conn, job_id)
+            view = cvs.view(conn, j) if j else None
+        if not view or not view["cv"] or view["cv"]["status"] != "done":
+            raise HTTPException(404, "No tailored CV for this job yet.")
+        return templates.TemplateResponse(request, "cv_print.html", {
+            "view": view, "embed": embed, "name": NAME, "headings": HEADINGS[view["cv"]["final"]["language"]]})
 
     @app.get("/companies", response_class=HTMLResponse)
     def companies(request: Request, q: str = ""):
@@ -132,8 +167,40 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             ctx = {"groups": groups, "unlabelled": bool(unlabelled), "verdict": verdict, "track": track,
                    "verdicts": VERDICTS, "tracks": queries.tracks(conn), "agreement": queries.agreement(conn),
                    "has_key": bool(key), "run": run, "last": None if run else matcher.last_run(conn),
-                   "stats": stats, "nav": "shortlist"}
+                   "stats": stats, "nav": "shortlist", **cv_batch_ctx(conn)}
         return templates.TemplateResponse(request, "shortlist.html", ctx)
+
+    def cv_batch_ctx(conn) -> dict:
+        ready = cvs.ready(conn)
+        shown = {r[0] for r in conn.execute(
+            f"SELECT job_id FROM match_evaluations WHERE verdict IN ({', '.join('?' * len(SHOWN))})", SHOWN)}
+        return {"cv_ready_ids": ready, "cv_ready": len(ready & shown), "cv_todo": cvs.batch_todo(conn),
+                "cv_running": cvs.running_count(conn), "cv_est": cvs.estimate(),
+                "peak": matcher.is_peak(datetime.now(timezone.utc))}
+
+    def cv_batch(request: Request, **ctx):
+        key, _ = keystore.get_key()
+        with closing(connect(db_path)) as conn:
+            return templates.TemplateResponse(request, "_cv_batch.html", {
+                "has_key": bool(key), **cv_batch_ctx(conn), **ctx})
+
+    @app.get("/shortlist/cv/panel", response_class=HTMLResponse)
+    def cv_batch_panel(request: Request):
+        return cv_batch(request)
+
+    @app.post("/shortlist/cv", response_class=HTMLResponse)
+    def cv_batch_confirm(request: Request):
+        return cv_batch(request, confirm=True)
+
+    @app.post("/shortlist/cv/start", response_class=HTMLResponse)
+    def cv_batch_start(request: Request):
+        key, _ = keystore.get_key()
+        if not key:
+            return cv_batch(request, error="Add your DeepSeek API key in Settings first.")
+        with closing(connect(db_path)) as conn:
+            todo = cvs.batch_todo(conn)
+        cvs.start(db_path, key, todo)
+        return cv_batch(request)
 
     @app.post("/shortlist/run", response_class=HTMLResponse)
     async def run_matcher(request: Request):
@@ -211,10 +278,17 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
     def settings(request: Request):
         key, source = keystore.get_key()
         with closing(connect(db_path)) as conn:
-            stats = queries.header_stats(conn)
+            stats, contact = queries.header_stats(conn), get_setting(conn, CONTACT)
         return templates.TemplateResponse(request, "settings.html", {
             "key_set": bool(key), "source": source, "tail": key[-4:] if key else "", "stats": stats,
-            "nav": "settings"})
+            "contact": contact, "nav": "settings"})
+
+    @app.post("/settings/cv-contact", response_class=HTMLResponse)
+    async def save_contact(request: Request):
+        contact = " ".join((await _form(request)).get("contact", "").split())[:200]
+        with closing(connect(db_path)) as conn:
+            set_setting(conn, CONTACT, contact)
+        return templates.TemplateResponse(request, "_cv_contact.html", {"contact": contact, "saved": True})
 
     @app.post("/settings/deepseek", response_class=HTMLResponse)
     async def save_key(request: Request):

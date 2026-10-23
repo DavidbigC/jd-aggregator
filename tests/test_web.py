@@ -135,7 +135,7 @@ def test_shortlist_groups_by_verdict(shortlisted):
     client, _ = shortlisted
     page = client.get("/shortlist").text
     assert page.index("<h2>Apply now") < page.index("Product Manager") < page.index("<h2>Stretch") < page.index("Junior Backend")
-    assert "Rec <b>77</b>" in page and "Base CV: OneKey Web3 PM" in page and "Scored by hand" in page
+    assert page.index("Want <b>90</b>") < page.index("HM <b>72</b>") < page.index("Rec 77") and "Base CV: OneKey Web3 PM" in page and "Scored by hand" in page
     assert 'Shortlist <span class="count">2</span>' in page
 
 

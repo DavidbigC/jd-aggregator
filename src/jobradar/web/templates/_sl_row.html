@@ -4,12 +4,13 @@
     <div class="job-sub">{{ e.company }}{% if e.where %} · {{ e.where }}{% endif %}{% if e.salary %} · {{ e.salary }}{% endif %}{% if e.posted_at %} · {{ e.posted_at | ago }}{% endif %}</div>
     {% if e.rec is not none %}
     <div class="sl-scores">
-      <span title="Recruiter screen">Rec <b>{{ e.rec }}</b></span>
-      <span title="Hiring manager">HM <b>{{ e.hm }}</b></span>
-      <span title="Your want">Want <b>{{ e.want }}</b></span>
-      <span class="muted" title="Rec × HM × Want / 10,000">priority {{ e.priority }}</span>
+      <span title="Would you pick this job">Want <b>{{ e.want }}</b></span>
+      <span title="Can you do it and prove it in interviews">HM <b>{{ e.hm }}</b></span>
+      <span class="muted" title="Would a recruiter shortlist your master CV as it is; the tailored CV is how you lift it">Rec {{ e.rec }}</span>
+      <span class="muted" title="Want^0.5 × HM^0.35 × Rec^0.15: Want counts most">priority {{ e.priority }}</span>
       {% if e.track %}<span class="muted">{{ e.track | replace('_', ' ') }}</span>{% endif %}
       {% if e.reason %}<span class="tag">{{ e.reason }}</span>{% endif %}
+      {% if e.job_id in cv_ready_ids %}<span class="tag" title="Open the job to read it">CV ready</span>{% endif %}
     </div>
     {% endif %}
     {% if e.why %}<p class="sl-why">{{ e.why }}</p>{% endif %}
