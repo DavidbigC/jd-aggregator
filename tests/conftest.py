@@ -34,6 +34,15 @@ def _router(request: httpx.Request) -> httpx.Response:
     return httpx.Response(200, content=(FX / name).read_bytes())
 
 
+@pytest.fixture(autouse=True)
+def cv_folder(tmp_path, monkeypatch):
+    """CV PDFs go to a temp folder through a stub renderer that keeps the HTML; test_cv calls real Chromium once."""
+    from jd_aggregator.cv import pdf
+    monkeypatch.setattr(pdf, "CV_PDF_DIR", tmp_path / "cvs")
+    monkeypatch.setattr(pdf, "render", lambda html: b"%PDF-stub " + html.encode())
+    return tmp_path / "cvs"
+
+
 @pytest.fixture
 def conn(tmp_path):
     c = connect(tmp_path / "test.db")

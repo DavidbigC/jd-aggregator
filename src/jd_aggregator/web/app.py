@@ -1,5 +1,6 @@
 import json
 import logging
+import subprocess
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
@@ -7,14 +8,14 @@ from urllib.parse import parse_qs, urlencode
 
 import httpx
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
 
 from .. import deepseek, keystore, prefs
 from ..config import PREFS_PROMPT, SECTORS_CSV
-from ..cv import CONTACT, get_setting, set_setting
+from ..cv import CONTACT, get_setting, pdf, set_setting
 from ..cv import runner as cvs
 from ..cv.tailor import HEADINGS, NAME
 from ..db import connect
@@ -71,6 +72,7 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
     app = FastAPI(title="JD Aggregator")
     templates = Jinja2Templates(directory=HERE / "templates")
     templates.env.filters["ago"] = ago
+    templates.env.filters["tilde"] = lambda p: str(p).replace(str(Path.home()), "~", 1)
     app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 
     def partial(request: Request) -> bool:
@@ -126,13 +128,36 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
         cvs.start(db_path, key, [job_id])
         return cv_section(request, job_id)
 
-    @app.get("/jobs/{job_id}/cv", response_class=HTMLResponse)
-    def cv_page(request: Request, job_id: int, embed: bool = False):
+    def done_view(job_id: int) -> dict:
         with closing(connect(db_path)) as conn:
             j, _ = queries.job_detail(conn, job_id)
             view = cvs.view(conn, j) if j else None
         if not view or not view["cv"] or view["cv"]["status"] != "done":
             raise HTTPException(404, "No tailored CV for this job yet.")
+        return view
+
+    @app.get("/jobs/{job_id}/cv.pdf")
+    def cv_pdf(job_id: int):
+        """Re-render (so a changed contact line is picked up), save to the CV folder, and download."""
+        path = pdf.save(done_view(job_id))
+        return FileResponse(path, media_type="application/pdf", filename=path.name)
+
+    @app.post("/jobs/{job_id}/cv/reveal")
+    def cv_reveal(job_id: int):
+        view = done_view(job_id)
+        path = view["pdf"] if view["pdf"].exists() else pdf.save(view)
+        subprocess.run(["open", "-R", str(path)])
+        return Response(status_code=204)
+
+    @app.post("/cvs/folder")
+    def cv_folder():
+        pdf.CV_PDF_DIR.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["open", str(pdf.CV_PDF_DIR)])
+        return Response(status_code=204)
+
+    @app.get("/jobs/{job_id}/cv", response_class=HTMLResponse)
+    def cv_page(request: Request, job_id: int, embed: bool = False):
+        view = done_view(job_id)
         return templates.TemplateResponse(request, "cv_print.html", {
             "view": view, "embed": embed, "name": NAME, "headings": HEADINGS[view["cv"]["final"]["language"]]})
 
@@ -175,7 +200,7 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
         shown = {r[0] for r in conn.execute(
             f"SELECT job_id FROM match_evaluations WHERE verdict IN ({', '.join('?' * len(SHOWN))})", SHOWN)}
         return {"cv_ready_ids": ready, "cv_ready": len(ready & shown), "cv_todo": cvs.batch_todo(conn),
-                "cv_running": cvs.running_count(conn), "cv_est": cvs.estimate(),
+                "cv_running": cvs.running_count(conn), "cv_est": cvs.estimate(), "cv_folder": pdf.CV_PDF_DIR,
                 "peak": matcher.is_peak(datetime.now(timezone.utc))}
 
     def cv_batch(request: Request, **ctx):

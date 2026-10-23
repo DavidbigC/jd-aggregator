@@ -3,7 +3,8 @@ import json
 from pathlib import Path
 
 from .classify import company_sectors, reclassify_jobs
-from .config import CV_SOURCE_DIR, DB_PATH, SECTORS_CSV, SEED_CSV
+from .config import CV_PDF_DIR, CV_SOURCE_DIR, DB_PATH, SECTORS_CSV, SEED_CSV
+from .cv import runner as cvs
 from .cv import sources
 from .db import connect
 from .lang import detect_lang
@@ -32,6 +33,7 @@ def main() -> None:
     csub = c.add_subparsers(dest="cv_cmd", required=True)
     cs = csub.add_parser("sources", help="rebuild seeds/cv_sources.md from devmaster-cv, scrubbed")
     cs.add_argument("--src", default=str(CV_SOURCE_DIR))
+    csub.add_parser("pdfs", help=f"save every finished CV as a PDF in {CV_PDF_DIR}")
     s = sub.add_parser("serve", help="start the web UI")
     s.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
@@ -56,6 +58,10 @@ def main() -> None:
         path = Path(args.path)
         rows = json.loads(path.read_text())
         print(f"evaluations imported: {import_results(conn, rows, run=args.run or path.stem)} of {len(rows)}")
+    elif args.cmd == "cv" and args.cv_cmd == "pdfs":
+        for job_id in sorted(cvs.ready(conn)):
+            if path := cvs.save_pdf(conn, job_id):
+                print(path)
     elif args.cmd == "cv":
         pack = sources.build(Path(args.src))
         sources.PACK.write_text(pack)

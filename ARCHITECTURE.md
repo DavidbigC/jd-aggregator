@@ -77,7 +77,16 @@ Every job pane, on Jobs and on Shortlist, has a **Tailored CV** section. It is w
   - the Settings contact line plus the public links from the pack;
   - Summary, Core Skills, Experience (`Org | Title | Dates`), Selected Projects, Additional Highlights, Education. Chinese CVs get Chinese headings.
 
-  `/jobs/{id}/cv` is the print page, styled with `static/resume.css` (a copy of devmaster-cv's). Its title, "David Chen - Company Title", becomes the PDF file name in Save as PDF. The job pane shows it in an iframe (`?embed=1`), plus **Copy as Markdown** (the same layout, ready for md-to-pdf) and **Rewrite**.
+  `/jobs/{id}/cv` is the print page, styled with `static/resume.css` (a copy of devmaster-cv's). Its title, "David Chen - Company Title", becomes the PDF file name in Save as PDF. The job pane shows it in an iframe (`?embed=1`), plus **Download PDF**, **Copy as Markdown** (the same layout, ready for md-to-pdf) and **Rewrite**.
+
+- **PDFs** (`cv/pdf.py`). Each finished CV is saved to `CV_PDF_DIR`, which defaults to `~/Documents/JD Aggregator CVs/` and can be overridden with the `JD_AGGREGATOR_CVS` env var, as "David Chen - Company Title.pdf". A rewrite overwrites the file.
+  - `pdf.html()` renders `cv_print.html` with `resume.css` inlined. `pdf.render()` prints it through Playwright's headless Chromium (A4, the CSS `@page` margins). Install that browser once with `python -m playwright install chromium-headless-shell`. It is separate from CloakBrowser, whose free licence allows a single session.
+  - `runner._run` saves the PDF as a CV finishes. A failure is logged, and the CV still counts as done.
+  - `GET /jobs/{id}/cv.pdf` re-renders, so a changed contact line is picked up, then saves the file and downloads it.
+  - `POST /jobs/{id}/cv/reveal` and `POST /cvs/folder` run `open -R` / `open`. This works because the app runs locally.
+  - The job pane shows the saved path, and the shortlist CV panel shows the folder.
+  - `cv pdfs` writes the PDFs for every finished CV.
+  - Tests use a temporary folder and a stub renderer, through an autouse fixture in conftest. One test renders with real Chromium.
 
 ## DeepSeek, Settings and Preferences (keystore.py, deepseek.py, prefs.py)
 - **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jd-aggregator.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
@@ -131,7 +140,7 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
   - remote_scope: anywhere unless a country or region is named.
 
 ## Layout
-- **src/jd_aggregator/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match/ (prefilter, evaluate, runner), cv/ (sources, tailor, runner), keystore, deepseek, prefs, `__main__`
+- **src/jd_aggregator/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match/ (prefilter, evaluate, runner), cv/ (sources, tailor, runner, pdf), keystore, deepseek, prefs, `__main__`
 - **src/jd_aggregator/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
 - **src/jd_aggregator/web/** — app.py, queries.py, templates/, static/
 - **seeds/boards.csv** — research seed of about 640 boards
@@ -143,7 +152,7 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running
-python -m jd_aggregator seed | poll [--source NAME] [--force] | relang | reclassify | match import FILE [--run NAME] | match rescore | cv sources [--src DIR] | serve [--port N]
+python -m jd_aggregator seed | poll [--source NAME] [--force] | relang | reclassify | match import FILE [--run NAME] | match rescore | cv sources [--src DIR] | cv pdfs | serve [--port N]
 
 `seed` also loads seeds/company_sectors.csv. `reclassify` recomputes every job's fields and every company's sector.
 

@@ -9,7 +9,7 @@ from ..db import connect
 from ..match import SHOWN
 from ..match.runner import cost
 from ..normalize import now_iso
-from . import CONTACT, get_setting, sources, tailor
+from . import CONTACT, get_setting, pdf, sources, tailor
 
 WORKERS = 4
 # Tokens for one CV (writer, review, reviser, final screen, usually a repair and a second screen), measured on the
@@ -58,6 +58,7 @@ def view(conn, job: dict) -> dict:
         out["stale"] = (cv["prompt_version"], cv["sources_hash"]) != (stamp["prompt_version"], stamp["sources_hash"])
         out["markdown"] = tailor.to_markdown(cv["final"], contact, out["links"])
         out["filename"] = tailor.filename(job)
+        out["pdf"] = pdf.location(out)
     return out
 
 
@@ -111,6 +112,13 @@ def _job(conn, job_id: int) -> tuple[dict, dict | None]:
     return job, json.loads(j["result"]) if j["result"] else None
 
 
+def save_pdf(conn, job_id: int):
+    """The job's finished CV as a PDF in the CV folder; None when its latest CV isn't finished."""
+    job, _ = _job(conn, job_id)
+    v = view(conn, {**job, "id": job_id})
+    return pdf.save(v) if v["cv"] and v["cv"]["status"] == "done" else None
+
+
 def _run(db_path, key: str, rid: int, job_id: int) -> None:
     with closing(connect(db_path)) as conn:
         def stage(s):
@@ -138,6 +146,10 @@ def _run(db_path, key: str, rid: int, job_id: int) -> None:
             conn.commit()
             log.info("tailored CV %d for job %d done: score %d (draft %d), $%.3f, %d calls", rid, job_id,
                      out["final_review"]["score"], out["review"]["score"], usd, len(out["usage"]))
+            try:
+                save_pdf(conn, job_id)
+            except Exception:
+                log.exception("PDF for tailored CV %d failed; Download PDF on the job retries", rid)
     with _lock:
         _active.discard(rid)
 

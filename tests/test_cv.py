@@ -5,8 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from jd_aggregator import deepseek, keystore
-from jd_aggregator.cv import CONTACT, set_setting, sources, tailor
+from jd_aggregator.cv import CONTACT, pdf, set_setting, sources, tailor
 from jd_aggregator.cv import runner as cvs
+from jd_aggregator.web import app as web
 from jd_aggregator.db import connect
 from jd_aggregator.ingest import ingest
 from jd_aggregator.match import import_results
@@ -14,6 +15,7 @@ from jd_aggregator.models import Posting
 from jd_aggregator.normalize import now_iso
 from jd_aggregator.web.app import create_app
 
+REAL_RENDER = pdf.render
 AD = "Analyse on-chain and product data with SQL and Python for our DeFi app. Remote, worldwide. " * 10
 CONTACT_LINE = "+44 7700 900123 · david@example.com · Somewhere"
 
@@ -278,3 +280,45 @@ def test_flagged_claims_show_up_front(app, fake_deepseek):
     _wait()
     section = client.get(f"/jobs/{ids['Dune']}/cv/section").text
     assert "<b>40/100</b>" in section and "Check before sending" in section and "(score capped at 40): decision memos" in section
+
+
+def test_finished_cvs_are_saved_as_pdfs(app, cv_folder, monkeypatch):
+    client, db, ids, _ = app
+    opened = []
+    monkeypatch.setattr(web.subprocess, "run", lambda args, **kw: opened.append(args))
+    client.post("/settings/cv-contact", data={"contact": CONTACT_LINE})
+    client.post(f"/jobs/{ids['Kamino']}/cv")
+    _wait()
+    saved = cv_folder / "David Chen - Kamino Product Data Analyst.pdf"
+    body = saved.read_bytes().decode()
+    assert body.startswith("%PDF") and CONTACT_LINE in body and "font-size: 9.5pt" in body and "Print / Save" not in body
+    section = client.get(f"/jobs/{ids['Kamino']}/cv/section").text
+    assert "Download PDF" in section and "PDF saved for uploading" in section and saved.name in section
+
+    client.post("/settings/cv-contact", data={"contact": "+44 7700 900999"})
+    r = client.get(f"/jobs/{ids['Kamino']}/cv.pdf")
+    assert r.headers["content-type"] == "application/pdf" and "attachment" in r.headers["content-disposition"]
+    assert "+44 7700 900999" in saved.read_text() and r.content == saved.read_bytes()
+    assert client.get(f"/jobs/{ids['Dune']}/cv.pdf").status_code == 404
+
+    assert client.post(f"/jobs/{ids['Kamino']}/cv/reveal").status_code == 204
+    assert client.post("/cvs/folder").status_code == 204
+    assert opened == [["open", "-R", str(saved)], ["open", str(cv_folder)]]
+    assert "Every finished CV is saved as a PDF in" in client.get("/shortlist").text
+
+
+def test_a_pdf_failure_keeps_the_cv(app, cv_folder, monkeypatch):
+    client, db, ids, _ = app
+    monkeypatch.setattr(pdf, "render", lambda html: 1 / 0)
+    client.post(f"/jobs/{ids['Dune']}/cv")
+    _wait()
+    section = client.get(f"/jobs/{ids['Dune']}/cv/section").text
+    assert "Recruiter screen of this CV" in section and "Download PDF saves it to" in section
+    assert not cv_folder.exists()
+
+
+def test_chromium_renders_a_cv_pdf():
+    view = {"cv": {"final": tailor.clean_cv(_cv(language="zh", summary="链上数据分析师。"))}, "filename": "x",
+            "contact": CONTACT_LINE, "links": []}
+    out = REAL_RENDER(pdf.html(view))
+    assert out.startswith(b"%PDF") and len(out) > 5000

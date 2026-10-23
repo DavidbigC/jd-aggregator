@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>{{ view.filename }}</title>
-  <link rel="stylesheet" href="/static/resume.css">
+  {% if css %}<style>{{ css | safe }}</style>{% else %}<link rel="stylesheet" href="/static/resume.css">{% endif %}
   <style>
     @media screen {
       html { background: {{ '#fff' if embed else '#e9e9e6' }}; }

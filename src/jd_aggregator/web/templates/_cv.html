@@ -32,11 +32,14 @@
   {% if c.final.notes %}<p class="muted cv-note">Writer's note: {{ c.final.notes }}</p>{% endif %}
   {% if stale %}<p class="muted cv-note">Made from an older master CV or prompt. Rewrite to refresh it.</p>{% endif %}
   <div class="card-actions">
-    <a class="btn small" href="/jobs/{{ job.id }}/cv" target="_blank" rel="noopener">Open · Save as PDF ↗</a>
+    <a class="btn small" href="/jobs/{{ job.id }}/cv.pdf">Download PDF</a>
+    <a class="ghost small" href="/jobs/{{ job.id }}/cv" target="_blank" rel="noopener">Open ↗</a>
     <button class="ghost small" type="button" onclick="navigator.clipboard.writeText(document.getElementById('cv-md-{{ job.id }}').value).then(() => this.textContent = 'Copied')">Copy as Markdown</button>
     {% if has_key %}<button class="ghost small" hx-post="/jobs/{{ job.id }}/cv" hx-target="#cv-{{ job.id }}" hx-swap="outerHTML" hx-disabled-elt="this">Rewrite (~${{ '%.2f' | format(cv_est) }})</button>{% endif %}
     <span class="muted small-print">{{ c.finished_at | ago }} · ${{ '%.3f' | format(c.cost_usd) }}</span>
   </div>
+  <p class="muted cv-note">{% if pdf.exists() %}PDF saved for uploading: <code>{{ pdf | tilde }}</code>{% else %}Download PDF saves it to <code>{{ pdf.parent | tilde }}</code> for uploading.{% endif %}
+    <button class="ghost small" hx-post="/jobs/{{ job.id }}/cv/reveal" hx-swap="none">Show in Finder</button></p>
   <textarea id="cv-md-{{ job.id }}" hidden>{{ markdown }}</textarea>
   <iframe class="cv-frame" src="/jobs/{{ job.id }}/cv?embed=1" title="Tailored CV" onload="this.style.height = this.contentDocument.documentElement.scrollHeight + 'px'"></iframe>
   {% else %}

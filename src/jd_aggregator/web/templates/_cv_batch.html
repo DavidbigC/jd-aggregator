@@ -14,5 +14,6 @@
     <span class="muted">{% if cv_ready %}{{ cv_ready }} shortlisted job{{ 's have' if cv_ready != 1 else ' has' }} a tailored CV; open a job to read it.{% elif not n %}No shortlisted jobs yet.{% else %}Tailored CVs: DeepSeek writes one per job from your master CV, a recruiter pass reviews it, then it's revised. You confirm the cost first.{% endif %}</span>
   </div>
   {% endif %}
+  {% if cv_ready %}<p class="muted cv-note">Every finished CV is saved as a PDF in <code>{{ cv_folder | tilde }}</code> <button class="ghost small" hx-post="/cvs/folder" hx-swap="none">Open folder</button></p>{% endif %}
   {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
 </section>
