@@ -27,7 +27,7 @@ David wants a CV tailored to each job, ready when the job is opened, so applying
 - **Pipeline.** Option 2: three calls to `deepseek-v4-pro` with thinking on and JSON mode.
   - The system message is the source pack plus `seeds/cv_writer_prompt.md`, or `seeds/cv_review_prompt.md` for the review.
   - The pack comes first and is byte-stable, so the prefix cache covers it in all three calls.
-- **Source pack.** `python -m jobradar cv sources` builds `seeds/cv_sources.md` from devmaster-cv:
+- **Source pack.** `python -m jd_aggregator cv sources` builds `seeds/cv_sources.md` from devmaster-cv:
   - drops dollar amounts other than the "$1M volume" ranking threshold;
   - drops any email or phone line;
   - drops the README's PDF and repo-upkeep sections.

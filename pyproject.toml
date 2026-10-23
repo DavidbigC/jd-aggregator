@@ -1,6 +1,7 @@
 [project]
-name = "jobradar"
+name = "jd-aggregator"
 version = "0.1.0"
+description = "Local crypto job aggregator: collects, de-duplicates, scores and shortlists job ads, and tailors a CV per job."
 requires-python = ">=3.12"
 dependencies = ["httpx>=0.27", "fastapi>=0.115", "uvicorn>=0.30", "jinja2>=3.1", "defusedxml>=0.7",
                 "cloakbrowser==0.6.3", "trafilatura==2.3.1", "langdetect==1.0.9"]
@@ -16,7 +17,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-jobradar = ["web/templates/*.html", "web/static/*"]
+jd_aggregator = ["web/templates/*.html", "web/static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

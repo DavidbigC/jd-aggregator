@@ -1,7 +1,7 @@
 import json
 
-from jobradar.ingest import ingest
-from jobradar.models import Posting
+from jd_aggregator.ingest import ingest
+from jd_aggregator.models import Posting
 
 T0, T1 = "2026-10-21T00:00:00Z", "2026-10-21T06:00:00Z"
 JD = " ".join(f"duty{i}" for i in range(300))

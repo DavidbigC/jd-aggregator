@@ -1,4 +1,4 @@
-from jobradar.collectors import feeds, web3career
+from jd_aggregator.collectors import feeds, web3career
 
 
 def _valid(ps, source):

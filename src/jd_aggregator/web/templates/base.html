@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Job Radar{% endblock %}</title>
+  <title>{% block title %}JD Aggregator{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js" defer></script>
 </head>
 <body>
 <header class="topbar">
-  <a class="brand" href="/">Job Radar</a>
+  <a class="brand" href="/">JD Aggregator</a>
   <nav>
     <a href="/" class="{{ 'on' if nav == 'jobs' }}">Jobs</a>
     <a href="/shortlist" class="{{ 'on' if nav == 'shortlist' }}">Shortlist{% if stats.unlabelled %} <span class="count">{{ stats.unlabelled }}</span>{% endif %}</a>

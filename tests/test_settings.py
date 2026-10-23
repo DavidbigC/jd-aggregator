@@ -2,8 +2,8 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from jobradar import deepseek, keystore
-from jobradar.web.app import create_app
+from jd_aggregator import deepseek, keystore
+from jd_aggregator.web.app import create_app
 
 GOOD = "sk-0123456789abcdef0123456789abcdef"
 

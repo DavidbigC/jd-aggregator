@@ -1,5 +1,5 @@
-from jobradar import runner
-from jobradar.models import Posting
+from jd_aggregator import runner
+from jd_aggregator.models import Posting
 
 KRAKEN_URL = "https://jobs.ashbyhq.com/kraken.com/993557d9-7482-4f63-aae0-5817998b2368"
 

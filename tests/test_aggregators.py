@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from jobradar.collectors import consider, getro, jobstash
+from jd_aggregator.collectors import consider, getro, jobstash
 
 FX = Path(__file__).parent / "fixtures"
 
@@ -34,7 +34,7 @@ def test_consider_board(http):
 
 
 def test_getro_takes_company_from_mismatched_linkedin_url():
-    from jobradar.collectors.getro import _company
+    from jd_aggregator.collectors.getro import _company
     url = "https://www.linkedin.com/jobs/view/training-specialist-welding-fx-at-hadrian-4476623474"
     assert _company("StreamingFast", url) == "Hadrian"
     assert _company("Jump Trading", "https://www.linkedin.com/jobs/view/quant-at-jump-trading-123") == "Jump Trading"

@@ -1,11 +1,11 @@
 import httpx
 import pytest
 
-from jobradar.http import Http
+from jd_aggregator.http import Http
 
 
 def _client(statuses, monkeypatch):
-    monkeypatch.setattr("jobradar.http.time.sleep", lambda s: None)
+    monkeypatch.setattr("jd_aggregator.http.time.sleep", lambda s: None)
     calls = []
 
     def handler(request):

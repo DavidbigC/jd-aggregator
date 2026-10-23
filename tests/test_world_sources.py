@@ -4,13 +4,13 @@ from pathlib import Path
 import httpx
 import pytest
 
-from jobradar import enrich
-from jobradar.collectors import boards, linkedin, seek, sites
-from jobradar.http import Http
-from jobradar.ingest import ingest
-from jobradar.lang import detect_lang
-from jobradar.models import Posting
-from jobradar.normalize import is_web3
+from jd_aggregator import enrich
+from jd_aggregator.collectors import boards, linkedin, seek, sites
+from jd_aggregator.http import Http
+from jd_aggregator.ingest import ingest
+from jd_aggregator.lang import detect_lang
+from jd_aggregator.models import Posting
+from jd_aggregator.normalize import is_web3
 
 FX = Path(__file__).parent / "fixtures"
 

@@ -3,7 +3,7 @@ import logging
 import httpx
 import pytest
 
-from jobradar import deepseek
+from jd_aggregator import deepseek
 
 
 def _reply(content, finish="stop"):
@@ -28,7 +28,7 @@ def replies(monkeypatch):
 
 def test_non_json_reply_is_retried(replies, caplog):
     replies += [_reply('{"reply": "cut off', finish="length"), _reply('{"reply": "ok", "changes": null}')]
-    with caplog.at_level(logging.INFO, logger="jobradar.deepseek"):
+    with caplog.at_level(logging.INFO, logger="jd_aggregator.deepseek"):
         data, usage = deepseek.chat_json("sk-x", [])
     assert data == {"reply": "ok", "changes": None} and usage["completion_tokens"] == 5
     assert "not a json object (finish=length)" in caplog.text and "attempt 2" in caplog.text
@@ -36,7 +36,7 @@ def test_non_json_reply_is_retried(replies, caplog):
 
 def test_dropped_connection_is_retried(replies, caplog):
     replies += [httpx.ReadTimeout("timed out"), _reply('{"reply": "ok"}')]
-    with caplog.at_level(logging.INFO, logger="jobradar.deepseek"):
+    with caplog.at_level(logging.INFO, logger="jd_aggregator.deepseek"):
         assert deepseek.chat_json("sk-x", [])[0] == {"reply": "ok"}
     assert "ReadTimeout" in caplog.text
 

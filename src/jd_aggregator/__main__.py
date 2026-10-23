@@ -14,7 +14,7 @@ from .runner import poll
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(prog="jobradar")
+    ap = argparse.ArgumentParser(prog="jd_aggregator")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("seed", help="load seeds/boards.csv into the board registry")
     p = sub.add_parser("poll", help="run every source that is due")

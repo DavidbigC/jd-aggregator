@@ -3,14 +3,14 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from jobradar import deepseek, enrich, keystore, prefs
-from jobradar.db import connect
-from jobradar.ingest import ingest
-from jobradar.match import evaluate, import_results, prefilter, set_label
-from jobradar.match import runner as matcher
-from jobradar.models import Posting
-from jobradar.normalize import now_iso
-from jobradar.web.app import create_app
+from jd_aggregator import deepseek, enrich, keystore, prefs
+from jd_aggregator.db import connect
+from jd_aggregator.ingest import ingest
+from jd_aggregator.match import evaluate, import_results, prefilter, set_label
+from jd_aggregator.match import runner as matcher
+from jd_aggregator.models import Posting
+from jd_aggregator.normalize import now_iso
+from jd_aggregator.web.app import create_app
 
 AD = "Analyse on-chain and product data with SQL and Python. Remote, worldwide. " * 10
 

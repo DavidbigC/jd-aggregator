@@ -1,9 +1,9 @@
-# 0005: DeepSeek as Job Radar's LLM, key in the Keychain, preferences in SQLite
+# 0005: DeepSeek as JD Aggregator's LLM, key in the Keychain, preferences in SQLite
 
 Date: 2026-10-22. Status: accepted (Phases A–B built first; the matcher was added in Phase C, see the last section).
 
 ## Problem
-Job Radar needs an LLM for two jobs:
+JD Aggregator needs an LLM for two jobs:
 - turning David's own words into structured job preferences;
 - later, scoring jobs against those preferences and the CV.
 
@@ -25,7 +25,7 @@ David wants all LLM work done inside the app, by a provider whose key they load 
 
 ## Decision
 - **Provider: DeepSeek, called with `httpx`** (`deepseek.py`), so there is no SDK dependency. The chat uses `deepseek-flash` with thinking off and `response_format: json_object`. An empty reply, which DeepSeek's docs say can happen, is retried once.
-- **Key: the macOS Keychain** (service `jobradar.deepseek`), through the built-in `security` tool.
+- **Key: the macOS Keychain** (service `jd-aggregator.deepseek`), through the built-in `security` tool.
   - The key is written through `security -i` on stdin, so it never appears in the process list.
   - It is checked against `^sk-[A-Za-z0-9]{16,}$` before storing, and confirmed with the free `GET /user/balance` call.
   - `DEEPSEEK_API_KEY` in the environment overrides the Keychain.

@@ -1,8 +1,8 @@
 import pytest
 
-from jobradar.ingest import ingest
-from jobradar.match import import_results, set_label
-from jobradar.models import Posting
+from jd_aggregator.ingest import ingest
+from jd_aggregator.match import import_results, set_label
+from jd_aggregator.models import Posting
 
 
 def _job(conn):

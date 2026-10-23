@@ -1,12 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from jobradar.classify import company_sectors
-from jobradar.db import connect
-from jobradar.ingest import ingest
-from jobradar.models import Posting
-from jobradar.normalize import now_iso
-from jobradar.web.app import create_app
+from jd_aggregator.classify import company_sectors
+from jd_aggregator.db import connect
+from jd_aggregator.ingest import ingest
+from jd_aggregator.models import Posting
+from jd_aggregator.normalize import now_iso
+from jd_aggregator.web.app import create_app
 
 JD = "blockchain " + " ".join(f"latency{i}" for i in range(120))
 
@@ -115,7 +115,7 @@ def test_sector_override_from_companies_page(client, tmp_path):
 
 @pytest.fixture
 def shortlisted(tmp_path):
-    from jobradar.match import import_results
+    from jd_aggregator.match import import_results
     db = tmp_path / "sl.db"
     conn = connect(db)
     ingest(conn, [Posting(source="cryptojobslist", source_job_id=str(i), company=c, title=t, posted_at=now_iso(),

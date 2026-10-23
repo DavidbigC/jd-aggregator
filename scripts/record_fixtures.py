@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 from fixture_routes import BODIES, HEADERS, ROUTES  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "src"))
-from jobradar.normalize import is_web3  # noqa: E402
+from jd_aggregator.normalize import is_web3  # noqa: E402
 
 FX = ROOT / "tests" / "fixtures"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"

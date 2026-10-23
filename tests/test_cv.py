@@ -4,15 +4,15 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from jobradar import deepseek, keystore
-from jobradar.cv import CONTACT, set_setting, sources, tailor
-from jobradar.cv import runner as cvs
-from jobradar.db import connect
-from jobradar.ingest import ingest
-from jobradar.match import import_results
-from jobradar.models import Posting
-from jobradar.normalize import now_iso
-from jobradar.web.app import create_app
+from jd_aggregator import deepseek, keystore
+from jd_aggregator.cv import CONTACT, set_setting, sources, tailor
+from jd_aggregator.cv import runner as cvs
+from jd_aggregator.db import connect
+from jd_aggregator.ingest import ingest
+from jd_aggregator.match import import_results
+from jd_aggregator.models import Posting
+from jd_aggregator.normalize import now_iso
+from jd_aggregator.web.app import create_app
 
 AD = "Analyse on-chain and product data with SQL and Python for our DeFi app. Remote, worldwide. " * 10
 CONTACT_LINE = "+44 7700 900123 · david@example.com · Somewhere"

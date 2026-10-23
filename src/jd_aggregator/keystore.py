@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 
-SERVICE, ACCOUNT = "jobradar.deepseek", "api-key"
+SERVICE, ACCOUNT = "jd-aggregator.deepseek", "api-key"
 KEY_RE = re.compile(r"^sk-[A-Za-z0-9]{16,}$")
 
 

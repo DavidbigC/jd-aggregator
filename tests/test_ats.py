@@ -1,7 +1,7 @@
 import pytest
 
-from jobradar.collectors import ats
-from jobradar.config import SUPPORTED_ATS
+from jd_aggregator.collectors import ats
+from jd_aggregator.config import SUPPORTED_ATS
 
 CASES = [
     ("greenhouse", "flowdesk", "gh:"), ("lever", "ethena", "lever:"), ("lever-eu", "aavelabs", "lever:"),

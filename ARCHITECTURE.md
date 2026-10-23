@@ -1,4 +1,6 @@
-# Job Radar — Architecture
+# JD Aggregator — Architecture
+
+Formerly Job Radar (renamed 2026-10-23).
 
 Local aggregator for crypto job postings. It polls company hiring systems (ATS), crypto job boards and popular general job sites in many languages, removes duplicates, fills in full job details, and serves a browsable UI at http://127.0.0.1:8765. It runs on one Mac with no cloud. The only LLM is DeepSeek, called with the key David loads in Settings (docs/decisions/0005).
 
@@ -11,7 +13,7 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 
 **Job pages.** `detail.parse()` reads the schema.org `JobPosting` JSON-LD most job sites publish, then known description containers (LinkedIn), then trafilatura main text.
 
-## Data model (SQLite, data/jobradar.db)
+## Data model (SQLite, data/jd_aggregator.db)
 - **companies** — one row per normalised company key. Aliases are applied, e.g. Payward → Kraken. `sector` (crypto / other) drives the default "Crypto companies" view; `sector_source` records which rule set it.
 - **boards** — ATS boards to poll. Seeded from seeds/boards.csv and auto-discovered from aggregator URLs (case-insensitive). `crypto_only` boards (DBS, Crusoe, DRW, Robinhood) keep only crypto-titled roles.
 - **jobs** — canonical jobs. The description prefers the ATS copy, then the longest job-page copy. `lang` is detected from title + description; `enriched_at` / `enrich_status` record the last job-page fetch. `role`, `seniority`, `countries` (ISO-2 list) and `remote_scope` (anywhere / restricted) come from classify.py.
@@ -43,17 +45,17 @@ collectors → `Posting` → `ingest` (dedup) → SQLite → `enrich` (job pages
 ## Matcher and Shortlist (match/, /shortlist)
 DeepSeek scores the jobs; the code decides the verdict. See docs/decisions/0005.
 - **Prefilter** (`match/prefilter.py`, free). Active crypto jobs → posted within `fresh_days` → title fits (keep and drop rules, widened or narrowed by `analyst_types` and `other_tracks`; compliance stays out unless David says yes or maybe) → location fits → ad language → one job per company and normalised title. Location: remote-anywhere (or 5+ "Remote (XX)" entries) and unspecified remote always pass; region-limited remote passes when its region is in `remote_regions` (UK and Europe until David sets it), with `single_country_remote` applied; offices only with `remote_or_uk_office`. The page shows the count after each step.
-- **Scoring** (`match/evaluate.py`). One call per job to `deepseek-v4-pro` with thinking on and JSON mode. The system message is `seeds/candidate_profile.md` + `seeds/match_prompt.md`, byte-stable so DeepSeek's prefix cache covers it; the user message has the preferences JSON, then the job and its whole ad. `clean()` validates the reply (scores clamped to 0–100, unquoted knockouts dropped, unknown CVs dropped). Knockouts are eligibility only: `right_to_work`, `location`, `language`, `licence`. Any other type DeepSeek sends (years, skills) becomes a "Hard ask" top risk instead, so a skill gap can't hide a job. `apply_notes` (code words, details to include) show as a "To apply" line on the shortlist row. `verdict()` applies the rules in order, led by Want (docs/decisions/0007): knockout or not actually remote → skip; want < 45 → skip; backend/quant → stretch if hm ≥ 40, else skip; apply now (want ≥ 65, hm ≥ 60, rec ≥ 50); tailor then apply (want ≥ 55 and hm ≥ 45, or rec ≥ 45 and hm ≥ 50); stretch (want ≥ 55, hm ≥ 35); else skip. `python -m jobradar match rescore` re-derives every verdict and priority from the stored scores without calling DeepSeek. An ad still under 500 characters after a fetch from its sighting URLs gets `needs_ad` without a DeepSeek call.
+- **Scoring** (`match/evaluate.py`). One call per job to `deepseek-v4-pro` with thinking on and JSON mode. The system message is `seeds/candidate_profile.md` + `seeds/match_prompt.md`, byte-stable so DeepSeek's prefix cache covers it; the user message has the preferences JSON, then the job and its whole ad. `clean()` validates the reply (scores clamped to 0–100, unquoted knockouts dropped, unknown CVs dropped). Knockouts are eligibility only: `right_to_work`, `location`, `language`, `licence`. Any other type DeepSeek sends (years, skills) becomes a "Hard ask" top risk instead, so a skill gap can't hide a job. `apply_notes` (code words, details to include) show as a "To apply" line on the shortlist row. `verdict()` applies the rules in order, led by Want (docs/decisions/0007): knockout or not actually remote → skip; want < 45 → skip; backend/quant → stretch if hm ≥ 40, else skip; apply now (want ≥ 65, hm ≥ 60, rec ≥ 50); tailor then apply (want ≥ 55 and hm ≥ 45, or rec ≥ 45 and hm ≥ 50); stretch (want ≥ 55, hm ≥ 35); else skip. `python -m jd_aggregator match rescore` re-derives every verdict and priority from the stored scores without calling DeepSeek. An ad still under 500 characters after a fetch from its sighting URLs gets `needs_ad` without a DeepSeek call.
 - **Re-scoring.** A job is scored again only when it has no DeepSeek row, or its ad, the profile, the prompt, the model or the preferences version changed.
 - **Runs** (`match/runner.py`). **Run matcher** on `/shortlist` runs the prefilter and shows how many jobs need scoring and the estimated cost (peak or off-peak price by UTC time). Nothing is spent until David presses **Score N jobs** or **Try 20 first** (labelled and hand-scored jobs go first). The run is a background thread in the server, 8 jobs at a time; the panel polls every 3 s and reloads the page when the run ends. One run at a time per process; a `running` row with no live thread (server restart) is marked interrupted. A 401/402 from DeepSeek stops the run.
 - **The page.** Grouped by verdict and sorted by priority, with Unlabelled, verdict and track filters. At most 3 jobs per company per group; the rest sit under "more from companies already listed". Each row shows the scores, why, watch-outs, the base CV, "DeepSeek's notes" (must-haves met or not, what to lead with, keywords, interview prep, questions for the recruiter) and who scored it. The header line shows how many of David's labels DeepSeek agrees with (Yes/Maybe vs a shown verdict, No vs skip).
 - **Labelling:** Y / M / N plus a note are saved through htmx (`POST /shortlist/{job_id}/label`). Re-scoring never touches labels. The nav tab counts unlabelled jobs with a shown verdict.
-- **Hand-scored runs** still load with `python -m jobradar match import FILE.json`, through the same `import_results()`.
+- **Hand-scored runs** still load with `python -m jd_aggregator match import FILE.json`, through the same `import_results()`.
 - **Profile review.** The Preferences page shows the candidate profile; corrections go into `profile_notes` through the chat and win over the profile.
 
 ## Tailored CVs (cv/, docs/decisions/0006)
 Every job pane, on Jobs and on Shortlist, has a **Tailored CV** section. It is written by DeepSeek from the audited master CV and checked by a recruiter pass.
-- **Source pack** (`cv/sources.py`). `python -m jobradar cv sources` builds `seeds/cv_sources.md` from devmaster-cv (`CV_SOURCE_DIR`, default `~/job_related/devmaster-cv`, or `JOBRADAR_CV_DIR`): the README, experience, skills and every project file. While building it:
+- **Source pack** (`cv/sources.py`). `python -m jd_aggregator cv sources` builds `seeds/cv_sources.md` from devmaster-cv (`CV_SOURCE_DIR`, default `~/job_related/devmaster-cv`, or `JD_AGGREGATOR_CV_DIR`): the README, experience, skills and every project file. While building it:
   - dollar amounts are cut, except the "$1M volume" ranking threshold. A bracketed or comma-separated fragment with an amount is removed; otherwise the line is dropped;
   - email and phone lines are dropped;
   - the README's PDF and repo-upkeep sections are dropped.
@@ -78,10 +80,10 @@ Every job pane, on Jobs and on Shortlist, has a **Tailored CV** section. It is w
   `/jobs/{id}/cv` is the print page, styled with `static/resume.css` (a copy of devmaster-cv's). Its title, "David Chen - Company Title", becomes the PDF file name in Save as PDF. The job pane shows it in an iframe (`?embed=1`), plus **Copy as Markdown** (the same layout, ready for md-to-pdf) and **Rewrite**.
 
 ## DeepSeek, Settings and Preferences (keystore.py, deepseek.py, prefs.py)
-- **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jobradar.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
+- **Key.** `/settings` saves the DeepSeek key in the macOS Keychain (`keystore.py`, service `jd-aggregator.deepseek`) only after the free `GET /user/balance` check passes. The `DEEPSEEK_API_KEY` environment variable overrides the Keychain. The database never holds the key.
 - **CV contact line.** `/settings` also saves the line shown under David's name on tailored CVs, in the `settings` table. It is added only when rendering, never sent to DeepSeek.
 - **Client.** `deepseek.py` makes plain httpx calls: `balance()`, and `chat_json()`, which uses JSON mode with thinking off by default. It retries once on a dropped connection or a reply that isn't a JSON object, and logs every call (model, seconds, tokens, finish reason) and every failure.
-- **Logs.** `jobradar serve` logs at INFO to stderr, which goes to `data/web.log` (under launchd, or when started by hand with that redirect). A failed chat turn logs its traceback and the first 300 characters of David's message, and the page keeps the typed text so it can be resent.
+- **Logs.** `jd_aggregator serve` logs at INFO to stderr, which goes to `data/web.log` (under launchd, or when started by hand with that redirect). A failed chat turn logs its traceback and the first 300 characters of David's message, and the page keeps the typed text so it can be resent.
 - **Preferences chat.** `/preferences` shows what the matcher knows next to a chat with `deepseek-flash`. Each turn sends:
   - the system prompt from `seeds/prefs_assistant_prompt.md`;
   - the field list;
@@ -129,9 +131,9 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
   - remote_scope: anywhere unless a country or region is named.
 
 ## Layout
-- **src/jobradar/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match/ (prefilter, evaluate, runner), cv/ (sources, tailor, runner), keystore, deepseek, prefs, `__main__`
-- **src/jobradar/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
-- **src/jobradar/web/** — app.py, queries.py, templates/, static/
+- **src/jd_aggregator/** — config, models, normalize, db, http, browser, detail, enrich, lang, ingest, registry, runner, match/ (prefilter, evaluate, runner), cv/ (sources, tailor, runner), keystore, deepseek, prefs, `__main__`
+- **src/jd_aggregator/collectors/** — ats.py (14 ATS adapters), one module per crypto aggregator, seek.py, linkedin.py, boards.py (small API/RSS boards) and sites.py (config-driven listing → job page collector for Habr, hh.ru, DOU, Djinni, Just Join IT, No Fluff Jobs, Green, Rocketpunch, Cutshort, ITviec, remote3, Foresight, 登链社区)
+- **src/jd_aggregator/web/** — app.py, queries.py, templates/, static/
 - **seeds/boards.csv** — research seed of about 640 boards
 - **seeds/prefs_assistant_prompt.md** — the preferences assistant's instructions
 - **seeds/candidate_profile.md** — the profile DeepSeek scores against (written from devmaster-cv, claim levels kept, no location)
@@ -141,19 +143,19 @@ Each run takes up to 400 active jobs that have no description, one under 200 cha
 - **tests/** — pytest. tests/fixtures holds recorded real responses (made by scripts/record_fixtures.py).
 
 ## Running
-python -m jobradar seed | poll [--source NAME] [--force] | relang | reclassify | match import FILE [--run NAME] | match rescore | cv sources [--src DIR] | serve [--port N]
+python -m jd_aggregator seed | poll [--source NAME] [--force] | relang | reclassify | match import FILE [--run NAME] | match rescore | cv sources [--src DIR] | serve [--port N]
 
 `seed` also loads seeds/company_sectors.csv. `reclassify` recomputes every job's fields and every company's sector.
 
 - **First time:** `seed`, then `poll --force`, then `serve`. A full poll takes about 8 minutes. Aggregators are fetched in background threads while the ATS pass runs with 8 workers; the 1 req/s per-host limit still holds, so getro (22 networks on one API host, ~7.5 min) sets the floor. The ATS pass took 4 min for ~9.8k jobs on 2026-10-21. Each ATS board is committed as it lands, so the UI fills in during the run. All SQLite writes stay on the main thread.
-- **Scheduling:** launchd/com.davidc.jobradar.poll.plist runs `poll` every 15 minutes, and each source decides whether it is due. launchd/com.davidc.jobradar.web.plist keeps the UI running.
+- **Scheduling:** launchd/com.davidc.jd-aggregator.poll.plist runs `poll` every 15 minutes, and each source decides whether it is due. launchd/com.davidc.jd-aggregator.web.plist keeps the UI running.
 
   Install:
-  `cp launchd/*.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.davidc.jobradar.poll.plist` (same for `.web`).
+  `cp launchd/*.plist ~/Library/LaunchAgents/ && launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.davidc.jd-aggregator.poll.plist` (same for `.web`).
 
   Stop:
-  `launchctl bootout gui/$(id -u)/com.davidc.jobradar.poll`.
-- **Rebuild from scratch:** `rm data/jobradar.db && python -m jobradar seed && python -m jobradar poll --force`.
+  `launchctl bootout gui/$(id -u)/com.davidc.jd-aggregator.poll`.
+- **Rebuild from scratch:** `rm data/jd_aggregator.db && python -m jd_aggregator seed && python -m jd_aggregator poll --force`.
 - **Logs:** data/poll.log and data/web.log (launchd); data/first-poll.log (manual first run).
 
 ## Operating notes (first poll, 2026-10-21)

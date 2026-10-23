@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from jobradar import detail
+from jd_aggregator import detail
 
 FX = Path(__file__).parent / "fixtures"
 

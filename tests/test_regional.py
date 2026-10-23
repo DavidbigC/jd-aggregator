@@ -1,6 +1,6 @@
-from jobradar.collectors import mycareersfuture, rebase, telegram
-from jobradar.config import INTERVALS
-from jobradar.runner import SOURCES
+from jd_aggregator.collectors import mycareersfuture, rebase, telegram
+from jd_aggregator.config import INTERVALS
+from jd_aggregator.runner import SOURCES
 
 DEJOB_EN = """#Recruitment
 🏡  Temporal     #Research

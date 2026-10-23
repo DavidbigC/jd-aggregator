@@ -1,5 +1,5 @@
-from jobradar.models import Posting
-from jobradar.registry import discover_boards, load_seed
+from jd_aggregator.models import Posting
+from jd_aggregator.registry import discover_boards, load_seed
 
 
 def test_load_seed_creates_companies_and_boards_once(conn, tmp_path):

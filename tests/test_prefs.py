@@ -3,9 +3,9 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from jobradar import deepseek, keystore, prefs
-from jobradar.db import connect
-from jobradar.web.app import create_app
+from jd_aggregator import deepseek, keystore, prefs
+from jd_aggregator.db import connect
+from jd_aggregator.web.app import create_app
 
 
 def test_validate_keeps_only_known_keys_and_allowed_values():

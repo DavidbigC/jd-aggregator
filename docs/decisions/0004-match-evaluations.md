@@ -23,7 +23,7 @@ The scores and David's own Yes/Maybe/No labels need a home that David actually u
   - It also holds David's `label` (Y/M/N), `label_note` and `labelled_at`.
 - **Importing a new run** upserts the score fields and never writes the label fields.
 - **Scores are plain integer columns,** not JSON, so the page can sort and filter in SQL.
-- **`python -m jobradar match import <file.json>`** loads results. The LLM pipeline will write through the same function.
+- **`python -m jd_aggregator match import <file.json>`** loads results. The LLM pipeline will write through the same function.
 - **`/shortlist`** shows evaluated jobs grouped by verdict, with Y/M/N buttons and a note. It reuses the existing job detail pane, so the full ad is one click away.
 
 ## Consequences

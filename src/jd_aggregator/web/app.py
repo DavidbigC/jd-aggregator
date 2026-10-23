@@ -68,7 +68,7 @@ async def _form(request: Request) -> dict:
 
 
 def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
-    app = FastAPI(title="Job Radar")
+    app = FastAPI(title="JD Aggregator")
     templates = Jinja2Templates(directory=HERE / "templates")
     templates.env.filters["ago"] = ago
     app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")

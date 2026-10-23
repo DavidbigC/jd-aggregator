@@ -18,7 +18,7 @@ Priority was rec·hm·want/10000. The verdict rules gated on `rec` (would a recr
   - tailor then apply needs want ≥ 55 and hm ≥ 45, or the old rec ≥ 45 and hm ≥ 50, so no previously shown job disappears;
   - stretch needs want ≥ 55 and hm ≥ 35;
   - quant and backend jobs are capped at stretch when hm ≥ 40.
-- **`python -m jobradar match rescore`** re-derives verdicts and priorities from the stored result JSON, without calling DeepSeek. Labels are kept.
+- **`python -m jd_aggregator match rescore`** re-derives verdicts and priorities from the stored result JSON, without calling DeepSeek. Labels are kept.
 - **Display.** Shortlist rows show Want first and in bold, then HM, then Rec muted.
 
 ## Consequences

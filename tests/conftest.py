@@ -9,8 +9,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 from fixture_routes import ROUTES  # noqa: E402
 
-from jobradar.db import connect  # noqa: E402
-from jobradar.http import Http  # noqa: E402
+from jd_aggregator.db import connect  # noqa: E402
+from jd_aggregator.http import Http  # noqa: E402
 
 FX = Path(__file__).parent / "fixtures"
 

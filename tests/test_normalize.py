@@ -1,4 +1,4 @@
-from jobradar.normalize import (ats_board_from_url, ats_key_from_url, company_key, html_to_text, is_web3,
+from jd_aggregator.normalize import (ats_board_from_url, ats_key_from_url, company_key, html_to_text, is_web3,
                                 regions_for, is_remote, relative_posted, shingles, similarity, title_key, to_iso,
                                 url_key)
 

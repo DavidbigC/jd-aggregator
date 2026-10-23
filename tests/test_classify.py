@@ -1,9 +1,9 @@
 import pytest
 
-from jobradar.classify import classify_job, company_sectors, countries_for, remote_scope, sector_for
-from jobradar.ingest import ingest
-from jobradar.models import Posting
-from jobradar.normalize import is_web3
+from jd_aggregator.classify import classify_job, company_sectors, countries_for, remote_scope, sector_for
+from jd_aggregator.ingest import ingest
+from jd_aggregator.models import Posting
+from jd_aggregator.normalize import is_web3
 
 
 @pytest.mark.parametrize("title, role", [
@@ -129,7 +129,7 @@ def test_ingest_sets_job_fields(conn):
 
 
 def test_sector_overrides_round_trip(conn, tmp_path):
-    from jobradar.registry import load_sectors, save_sector
+    from jd_aggregator.registry import load_sectors, save_sector
     path = tmp_path / "company_sectors.csv"
     ingest(conn, [Posting(source="jobstash", source_job_id="1", company="Quiet Labs", title="Engineer")])
     save_sector(conn, path, 1, "crypto", "ui")

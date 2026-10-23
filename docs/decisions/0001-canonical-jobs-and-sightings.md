@@ -18,4 +18,4 @@ The matching ladder is: ATS id → company + normalised title → description si
 **Consequences.**
 - Reads are simple and fast.
 - Merge mistakes are sticky: a wrong attach stays until the database is rebuilt. Sightings marked `probable` make the risky ones visible.
-- Rebuilding is cheap: delete data/jobradar.db and poll again.
+- Rebuilding is cheap: delete data/jd_aggregator.db and poll again.
