@@ -4,31 +4,10 @@
 <div class="page-head">
   <h1>Preferences</h1>
 </div>
-<p class="sub-head">What the job matcher knows about you. To change anything, tell DeepSeek in the chat. Nothing changes until you press <b>Apply</b>.</p>
-<div class="pref-layout">
-  {% include "_prefs_summary.html" %}
-  <section class="card chat">
-    <div class="chat-head">
-      <h2>Chat with DeepSeek</h2>
-      {% if has_key %}<button class="ghost small" hx-post="/preferences/new" hx-target="#chat-log" hx-swap="outerHTML">New conversation</button>{% endif %}
-    </div>
-    {% include "_chat_log.html" %}
-    {% if has_key %}
-    <form class="chat-form" hx-post="/preferences/chat" hx-target="#chat-log" hx-swap="beforeend" hx-indicator="#typing"
-          hx-disabled-elt="find button"
-          hx-on::after-request="if (event.detail.successful && !event.detail.xhr.getResponseHeader('X-Chat-Error')) this.reset(); const l = document.getElementById('chat-log'); l.scrollTop = l.scrollHeight">
-      <textarea name="text" rows="2" required placeholder="Tell DeepSeek what you want, e.g. &quot;UK hours only, no visa needed&quot;" aria-label="Message"
-                onkeydown="if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); this.form.requestSubmit(); }"></textarea>
-      <button>Send</button>
-    </form>
-    <p id="typing" class="typing muted">DeepSeek is typing…</p>
-    {% else %}
-    <p class="card-msg">Add your DeepSeek API key in <a href="/settings">Settings</a> to start the chat.</p>
-    {% endif %}
-  </section>
-</div>
+<p class="sub-head">What the job matcher knows about you. To change anything, tell Claude in Claude Code; each change is saved as a new version.</p>
+{% include "_prefs_summary.html" %}
 <details class="card profile">
-  <summary><b>Your profile, as the matcher sees it</b> <span class="muted">— DeepSeek scores every job against this. Something wrong or missing? Tell DeepSeek in the chat and it will add a correction.</span></summary>
+  <summary><b>Your profile, as the matcher sees it</b> <span class="muted">— Claude scores every job against this. Something wrong or missing? Tell Claude and it will add a correction.</span></summary>
   <div class="profile-text">{{ profile }}</div>
 </details>
 {% endblock %}

@@ -18,7 +18,7 @@
     </select>
   </form>
 </div>
-<p class="sub-head">DeepSeek scores each job against your profile and <a href="/preferences">preferences</a>: <b>Want</b> = would you pick it · <b>HM</b> = can you do it and prove it · <b>Rec</b> = would a recruiter shortlist your master CV as it is. Sorted mostly by Want; a tailored CV is how you lift Rec. Label jobs Yes / Maybe / No so we can check DeepSeek's judgement.{% if agreement[1] %} DeepSeek agrees with <b>{{ agreement[0] }} of {{ agreement[1] }}</b> of your labels.{% endif %}</p>
+<p class="sub-head">Claude scores each job against your profile and <a href="/preferences">preferences</a>: <b>Want</b> = would you pick it · <b>HM</b> = can you do it and prove it · <b>Rec</b> = would a recruiter shortlist your master CV as it is. Sorted mostly by Want; a tailored CV is how you lift Rec. Label jobs Yes / Maybe / No so we can check the matcher's judgement.{% if agreement[1] %} The matcher agrees with <b>{{ agreement[0] }} of {{ agreement[1] }}</b> of your labels.{% endif %}</p>
 {% include "_match_run.html" %}
 {% include "_cv_batch.html" %}
 <div class="sl-layout">

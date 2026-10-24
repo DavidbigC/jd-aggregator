@@ -35,3 +35,4 @@
 - 2026-10-23 feat: sort and filter the shortlist mostly by Want instead of the recruiter score, with a free `match rescore`
 - 2026-10-23 feat: save every tailored CV as a PDF in ~/Documents/JD Aggregator CVs, with Download PDF, Show in Finder and `cv pdfs`
 - 2026-10-24 fix: CV summaries end on David's edge and never claim to serve the hiring company's users
+- 2026-10-24 feat: Claude does the scoring and CVs through match todo/results and cv todo/save; DeepSeek calls, the run buttons and the preferences chat are removed, the key card stays

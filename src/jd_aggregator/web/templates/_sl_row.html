@@ -19,7 +19,7 @@
     {% if e.start_cv %}<p class="muted sl-cv">Base CV: {{ e.start_cv }} <span title="The earlier tailored application CV closest to this job">(your earlier application CV)</span></p>{% endif %}
     {% if e.notes %}
     <details class="sl-notes">
-      <summary class="muted">DeepSeek's notes</summary>
+      <summary class="muted">Matcher notes</summary>
       {% if e.notes.must_haves %}<p><b>Must-haves</b></p>
       <ul>{% for m in e.notes.must_haves %}<li><span class="met-{{ m.met }}">{{ m.met }}</span> {{ m.req }}{% if m.evidence %} <span class="muted">— {{ m.evidence }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
       {% for label, items in [('Lead with', e.notes.lead_with), ('Keywords to mirror', e.notes.mirror_keywords), ('Interview prep', e.notes.interview_prep), ('Ask the recruiter', e.notes.questions_for_recruiter)] if items %}
@@ -27,7 +27,7 @@
       {% endfor %}
     </details>
     {% endif %}
-    <p class="muted small-print">{{ 'Scored by ' ~ e.model if e.model else 'Scored by hand (Claude), before DeepSeek' }}</p>
+    <p class="muted small-print">{{ 'Scored by ' ~ e.model if e.model else 'Scored by hand' }}</p>
   </div>
   <div class="sl-side">
     {% include "_label.html" %}

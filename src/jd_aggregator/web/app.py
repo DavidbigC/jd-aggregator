@@ -1,4 +1,3 @@
-import json
 import logging
 import subprocess
 from contextlib import closing
@@ -14,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.concurrency import run_in_threadpool
 
 from .. import deepseek, keystore, prefs
-from ..config import PREFS_PROMPT, SECTORS_CSV
+from ..config import SECTORS_CSV
 from ..cv import CONTACT, get_setting, pdf, set_setting
 from ..cv import runner as cvs
 from ..cv.tailor import HEADINGS, NAME
@@ -60,10 +59,6 @@ def _check_key(key: str) -> tuple[str | None, str | None]:
     return (text if b.get("is_available") else f"{text} (top up to make calls)"), None
 
 
-def _msg(m: dict) -> dict:
-    return {**m, "changes": prefs.describe_change(json.loads(m["proposal"])) if m.get("proposal") else []}
-
-
 async def _form(request: Request) -> dict:
     return {k: v[-1] for k, v in parse_qs((await request.body()).decode()).items()}
 
@@ -97,7 +92,6 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
 
     @app.get("/jobs/{job_id}", response_class=HTMLResponse)
     def job(request: Request, job_id: int):
-        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
             j, sightings = queries.job_detail(conn, job_id)
             if not j:
@@ -105,27 +99,18 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             stats, cv = queries.header_stats(conn), cvs.view(conn, j)
         name = "_job_detail.html" if partial(request) else "job.html"
         return templates.TemplateResponse(request, name, {"job": j, "sightings": sightings, "stats": stats,
-                                                          "nav": "jobs", "has_key": bool(key), **cv})
+                                                          "nav": "jobs", **cv})
 
     def cv_section(request: Request, job_id: int, **ctx):
-        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
             j, _ = queries.job_detail(conn, job_id)
             if not j:
                 raise HTTPException(404)
             cv = cvs.view(conn, j)
-        return templates.TemplateResponse(request, "_cv.html", {"job": j, "has_key": bool(key), **cv, **ctx})
+        return templates.TemplateResponse(request, "_cv.html", {"job": j, **cv, **ctx})
 
     @app.get("/jobs/{job_id}/cv/section", response_class=HTMLResponse)
     def cv_status(request: Request, job_id: int):
-        return cv_section(request, job_id)
-
-    @app.post("/jobs/{job_id}/cv", response_class=HTMLResponse)
-    def tailor_cv(request: Request, job_id: int):
-        key, _ = keystore.get_key()
-        if not key:
-            return cv_section(request, job_id, error="Add your DeepSeek API key in Settings first.")
-        cvs.start(db_path, key, [job_id])
         return cv_section(request, job_id)
 
     def done_view(job_id: int) -> dict:
@@ -177,21 +162,13 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
             c = conn.execute("SELECT id, sector, sector_source FROM companies WHERE id = ?", (company_id,)).fetchone()
         return templates.TemplateResponse(request, "_sector.html", {"c": dict(c)})
 
-    def run_panel(request: Request, conn, **ctx):
-        key, _ = keystore.get_key()
-        run = matcher.running(conn)
-        return templates.TemplateResponse(request, "_match_run.html", {
-            "has_key": bool(key), "run": run, "last": None if run else matcher.last_run(conn), **ctx})
-
     @app.get("/shortlist", response_class=HTMLResponse)
     def shortlist(request: Request, unlabelled: str = "", verdict: str = "", track: str = ""):
-        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
             groups, stats = queries.shortlist(conn, bool(unlabelled), verdict, track), queries.header_stats(conn)
-            run = matcher.running(conn)
             ctx = {"groups": groups, "unlabelled": bool(unlabelled), "verdict": verdict, "track": track,
                    "verdicts": VERDICTS, "tracks": queries.tracks(conn), "agreement": queries.agreement(conn),
-                   "has_key": bool(key), "run": run, "last": None if run else matcher.last_run(conn),
+                   "waiting": len(matcher.plan(conn)["todo"]), "last": matcher.last_run(conn),
                    "stats": stats, "nav": "shortlist", **cv_batch_ctx(conn)}
         return templates.TemplateResponse(request, "shortlist.html", ctx)
 
@@ -199,69 +176,8 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
         ready = cvs.ready(conn)
         shown = {r[0] for r in conn.execute(
             f"SELECT job_id FROM match_evaluations WHERE verdict IN ({', '.join('?' * len(SHOWN))})", SHOWN)}
-        return {"cv_ready_ids": ready, "cv_ready": len(ready & shown), "cv_todo": cvs.batch_todo(conn),
-                "cv_running": cvs.running_count(conn), "cv_est": cvs.estimate(), "cv_folder": pdf.CV_PDF_DIR,
-                "peak": matcher.is_peak(datetime.now(timezone.utc))}
-
-    def cv_batch(request: Request, **ctx):
-        key, _ = keystore.get_key()
-        with closing(connect(db_path)) as conn:
-            return templates.TemplateResponse(request, "_cv_batch.html", {
-                "has_key": bool(key), **cv_batch_ctx(conn), **ctx})
-
-    @app.get("/shortlist/cv/panel", response_class=HTMLResponse)
-    def cv_batch_panel(request: Request):
-        return cv_batch(request)
-
-    @app.post("/shortlist/cv", response_class=HTMLResponse)
-    def cv_batch_confirm(request: Request):
-        return cv_batch(request, confirm=True)
-
-    @app.post("/shortlist/cv/start", response_class=HTMLResponse)
-    def cv_batch_start(request: Request):
-        key, _ = keystore.get_key()
-        if not key:
-            return cv_batch(request, error="Add your DeepSeek API key in Settings first.")
-        with closing(connect(db_path)) as conn:
-            todo = cvs.batch_todo(conn)
-        cvs.start(db_path, key, todo)
-        return cv_batch(request)
-
-    @app.post("/shortlist/run", response_class=HTMLResponse)
-    async def run_matcher(request: Request):
-        def check():
-            with closing(connect(db_path)) as conn:
-                return matcher.plan(conn)
-        p = await run_in_threadpool(check)
-        with closing(connect(db_path)) as conn:
-            return run_panel(request, conn, plan=p, sample=matcher.SAMPLE)
-
-    @app.post("/shortlist/run/start", response_class=HTMLResponse)
-    async def start_matcher(request: Request):
-        limit = (await _form(request)).get("limit", "")
-        key, _ = keystore.get_key()
-        error = None
-        if not key:
-            error = "Add your DeepSeek API key in Settings first."
-        else:
-            try:
-                await run_in_threadpool(matcher.start, db_path, key, int(limit) if limit.isdigit() else None)
-            except matcher.AlreadyRunning:
-                error = "A run is already in progress."
-        with closing(connect(db_path)) as conn:
-            return run_panel(request, conn, error=error)
-
-    @app.get("/shortlist/run/status", response_class=HTMLResponse)
-    def matcher_status(request: Request):
-        with closing(connect(db_path)) as conn:
-            if not matcher.running(conn):
-                return HTMLResponse("", headers={"HX-Refresh": "true"})
-            return run_panel(request, conn)
-
-    @app.get("/shortlist/run/panel", response_class=HTMLResponse)
-    def matcher_panel(request: Request):
-        with closing(connect(db_path)) as conn:
-            return run_panel(request, conn)
+        return {"cv_ready_ids": ready, "cv_ready": len(ready & shown), "cv_todo": len(cvs.todo_ids(conn)),
+                "cv_folder": pdf.CV_PDF_DIR}
 
     @app.post("/shortlist/{job_id}/label", response_class=HTMLResponse)
     async def label(request: Request, job_id: int):
@@ -343,67 +259,12 @@ def create_app(db_path, sectors_csv=SECTORS_CSV) -> FastAPI:
 
     @app.get("/preferences", response_class=HTMLResponse)
     def preferences(request: Request):
-        key, _ = keystore.get_key()
         with closing(connect(db_path)) as conn:
             p, version = prefs.current(conn)
-            msgs, stats = prefs.messages(conn), queries.header_stats(conn)
+            stats = queries.header_stats(conn)
         return templates.TemplateResponse(request, "preferences.html", {
             "summary": prefs.summary(p), "missing": len(prefs.missing(p)), "version": version,
-            "msgs": [_msg(m) for m in msgs], "has_key": bool(key), "profile": evaluate.PROFILE.read_text(),
+            "profile": evaluate.PROFILE.read_text(),
             "stats": stats, "nav": "preferences"})
-
-    def chat_turn(key: str, text: str) -> list[dict]:
-        with closing(connect(db_path)) as conn:
-            return prefs.reply(conn, key, PREFS_PROMPT.read_text(), text)
-
-    @app.post("/preferences/chat", response_class=HTMLResponse)
-    async def chat(request: Request):
-        key, _ = keystore.get_key()
-        text = (await _form(request)).get("text", "").strip()[:2000]
-        error = None
-        if not key:
-            error = "Add your DeepSeek API key in Settings first."
-        else:
-            try:
-                new = await run_in_threadpool(chat_turn, key, text)
-            except httpx.HTTPStatusError as e:
-                log.exception("preferences chat failed; message was %r", text[:300])
-                error = f"DeepSeek returned an error ({e.response.status_code}). Check your key and balance in Settings."
-            except (httpx.HTTPError, ValueError):
-                log.exception("preferences chat failed; message was %r", text[:300])
-                error = "DeepSeek didn't answer properly. Your message is still in the box; please send it again."
-        if error:
-            return templates.TemplateResponse(request, "_chat_msg.html", {"m": {
-                "id": "error", "role": "assistant error", "content": error}}, headers={"X-Chat-Error": "1"})
-        return HTMLResponse("".join(templates.get_template("_chat_msg.html").render(m=_msg(m)) for m in new))
-
-    def proposal_response(request: Request, msg_id: int, ok: bool):
-        if not ok:
-            raise HTTPException(404)
-        with closing(connect(db_path)) as conn:
-            m = dict(conn.execute("SELECT * FROM pref_messages WHERE id = ?", (msg_id,)).fetchone())
-            p, version = prefs.current(conn)
-        summary = templates.get_template("_prefs_summary.html").render(
-            summary=prefs.summary(p), missing=len(prefs.missing(p)), version=version, oob=True)
-        return HTMLResponse(templates.get_template("_chat_msg.html").render(m=_msg(m)) + summary)
-
-    @app.post("/preferences/proposal/{msg_id}/apply", response_class=HTMLResponse)
-    def apply_proposal(request: Request, msg_id: int):
-        with closing(connect(db_path)) as conn:
-            ok = prefs.apply(conn, msg_id)
-        return proposal_response(request, msg_id, ok)
-
-    @app.post("/preferences/proposal/{msg_id}/discard", response_class=HTMLResponse)
-    def discard_proposal(request: Request, msg_id: int):
-        with closing(connect(db_path)) as conn:
-            ok = prefs.discard(conn, msg_id)
-        return proposal_response(request, msg_id, ok)
-
-    @app.post("/preferences/new", response_class=HTMLResponse)
-    def new_conversation(request: Request):
-        key, _ = keystore.get_key()
-        with closing(connect(db_path)) as conn:
-            prefs.new_conversation(conn)
-        return templates.TemplateResponse(request, "_chat_log.html", {"msgs": [], "has_key": bool(key)})
 
     return app

@@ -218,7 +218,7 @@ def tracks(conn) -> list[str]:
 
 
 def agreement(conn) -> tuple[int, int]:
-    """How many of David's labels DeepSeek's verdicts agree with: Yes/Maybe vs a shown verdict, No vs skip."""
+    """How many of David's labels the matcher's verdicts agree with: Yes/Maybe vs a shown verdict, No vs skip."""
     rows = conn.execute("SELECT label, verdict FROM match_evaluations WHERE label IS NOT NULL AND model IS NOT NULL "
                         "AND verdict != 'needs_ad'").fetchall()
     agree = sum((r["label"] in ("Y", "M")) == (r["verdict"] in SHOWN) for r in rows)

@@ -2,11 +2,10 @@ import hashlib
 import json
 import re
 
-from .. import deepseek
 from ..config import ROOT
 from . import priority
 
-MODEL = "deepseek-v4-pro"
+MODEL = "claude-opus-5-5"
 PROFILE = ROOT / "seeds" / "candidate_profile.md"
 PROMPT = ROOT / "seeds" / "match_prompt.md"
 TRACKS = ("analyst", "product", "research", "ops_strategy", "growth", "quant", "backend", "none")
@@ -27,17 +26,6 @@ def stamps(prefs_version: int) -> dict:
             "prefs_version": prefs_version}
 
 
-def messages(job: dict, prefs: dict) -> list[dict]:
-    """Profile and prompt first and byte-stable, then preferences, so DeepSeek's prefix cache covers all three."""
-    ad = (f"## David's preferences (json)\n{json.dumps(prefs, ensure_ascii=False, sort_keys=True)}\n\n"
-          f"## Job\nTitle: {job['title']}\nCompany: {job['company']}\n"
-          f"Locations: {' / '.join(job['locations']) or 'not given'}\nJob board's remote label: {job['place']}\n"
-          f"Salary: {job['salary'] or 'not given'}\nPosted: {(job['posted_at'] or '')[:10] or 'unknown'}\n\n"
-          f"### Full ad\n{job['description']}")
-    return [{"role": "system", "content": f"{PROFILE.read_text()}\n\n{PROMPT.read_text()}"},
-            {"role": "user", "content": ad}]
-
-
 def _text(x, limit=300) -> str:
     return str(x).strip()[:limit] if isinstance(x, (str, int, float)) and str(x).strip() else ""
 
@@ -47,7 +35,7 @@ def _texts(x, n=8) -> list[str]:
 
 
 def clean(data: dict) -> dict:
-    """Validate DeepSeek's JSON; raise ValueError when the scores are unusable."""
+    """Validate the matcher's JSON; raise ValueError when the scores are unusable."""
     scores = data.get("scores") or {}
     try:
         s = {k: min(100, max(0, round(float(scores[k])))) for k in SCORES}
@@ -100,7 +88,7 @@ def verdict(r: dict) -> tuple[str, str | None]:
 
 
 def rescore(conn) -> dict[str, int]:
-    """Re-derive every verdict and priority from the stored scores, without calling DeepSeek. Labels are kept."""
+    """Re-derive every verdict and priority from the stored scores. Labels are kept."""
     moved: dict[str, int] = {}
     for row in conn.execute("SELECT job_id, verdict, rec, hm, want, result FROM match_evaluations "
                             "WHERE rec IS NOT NULL").fetchall():
@@ -118,15 +106,13 @@ def rescore(conn) -> dict[str, int]:
     return moved
 
 
-def evaluate(key: str, job: dict, prefs: dict, stamp: dict) -> tuple[dict, dict]:
-    """Score one job. Returns the row for import_results and DeepSeek's token usage."""
-    data, usage = deepseek.chat_json(key, messages(job, prefs), model=MODEL, thinking=True, max_tokens=16000)
+def row(job_id: int, description: str, data: dict, stamp: dict) -> dict:
+    """One matcher answer as a row for import_results; raise ValueError when the scores are unusable."""
     r = clean(data)
     v, reason = verdict(r)
     knock = "; ".join(f"“{k['quote']}”" for k in r["knockouts"][:2])
     risk = "; ".join(([f"Knockout: {knock}"] if knock else []) + r["top_risks"][:2])
-    return {"job_id": job["id"], "verdict": v, "reason": reason, "track": r["track"],
+    return {"job_id": job_id, "verdict": v, "reason": reason, "track": r["track"],
             "rec": r["scores"]["recruiter"], "hm": r["scores"]["hiring_manager"], "want": r["scores"]["want"],
             "why": r["one_line"], "risk": risk or None, "start_cv": r["start_from"],
-            "description_hash": digest(job["description"] or ""), "result": json.dumps(r, ensure_ascii=False),
-            **stamp}, usage
+            "description_hash": digest(description), "result": json.dumps(r, ensure_ascii=False), **stamp}

@@ -6,11 +6,11 @@ It does five things:
 
 - **Collects job ads** from about 640 sources and merges duplicates into one job. The sources are company hiring systems (Greenhouse, Lever, Ashby and 11 more), crypto job boards, Telegram channels, and general sites such as LinkedIn and SEEK, in many languages.
 - **Fills in** each job's full description, and tags its role, seniority, countries and remote scope.
-- **Scores the fit** of each job against the candidate profile with an LLM, and builds a shortlist sorted mostly by how much the candidate wants the job.
-- **Tailors a CV** for each shortlisted job. A writer drafts it, a recruiter-style reviewer critiques it, the writer revises, and a final screen checks it. Code-level checks guard the truth rules.
+- **Scores the fit** of each job against the candidate profile, and builds a shortlist sorted mostly by how much the candidate wants the job.
+- **Tailors a CV** for each shortlisted job: drafted, critiqued by a recruiter-style review, revised and screened again. Code-level checks guard the truth rules.
 - **Saves every finished CV as a PDF** in one folder, ready to upload to job sites (see below).
 
-DeepSeek is the LLM today. It is due to be replaced.
+The app calls no LLM itself. Claude, working in Claude Code, does the scoring and the CVs: the app writes the work to a JSON file (`match todo`, `cv todo`), and loads Claude's answers back through its own validation and rules (`match results`, `cv save`). See docs/decisions/0008.
 
 ## Setup
 
@@ -23,17 +23,15 @@ python3.14 -m venv .venv
 .venv/bin/python -m jd_aggregator serve         # http://127.0.0.1:8765
 ```
 
-Then open **Settings** and do two things:
-
-- Add a DeepSeek API key. It is checked, then stored in the macOS Keychain.
-- Add the contact line printed under the name on every CV. It is stored only in the local database.
+Then open **Settings** and add the contact line printed under the name on every CV. It is stored only in the local database. (The DeepSeek key card is still there but unused.)
 
 ## Commands
 
 ```
 python -m jd_aggregator seed | poll [--source NAME] [--force] | relang | reclassify
-                        | match import FILE | match rescore
-                        | cv sources [--src DIR] | cv pdfs
+                        | match todo FILE | match results FILE | match import FILE | match rescore
+                        | cv todo FILE | cv save FILE | cv sources [--src DIR] | cv pdfs
+                        | prefs set FILE
                         | serve [--port N]
 ```
 
@@ -53,9 +51,9 @@ In the app:
 ## Data and privacy
 
 - `data/` holds the SQLite database, the logs and the contact line. It is git-ignored.
-- The API key is kept only in the macOS Keychain, or in the `DEEPSEEK_API_KEY` environment variable.
+- The (unused) DeepSeek key is kept only in the macOS Keychain, or in the `DEEPSEEK_API_KEY` environment variable.
 - `seeds/` holds the candidate's own material: the profile, the CV source pack and the prompts. Replace these to use the app for someone else.
-- The contact line is never sent to the LLM. Generated CVs are checked for phone numbers, emails and dollar figures before they are saved.
+- The contact line is added only when a CV is rendered. CVs are checked for phone numbers, emails and dollar figures before they are saved.
 
 ## Docs
 

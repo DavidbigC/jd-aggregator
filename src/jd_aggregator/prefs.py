@@ -1,6 +1,5 @@
 import json
 
-from . import deepseek
 from .normalize import now_iso
 
 LEVELS = {"yes": "Yes", "maybe": "Maybe", "no": "No"}
@@ -134,24 +133,6 @@ def save(conn, prefs: dict, source: str) -> int:
     return cur.lastrowid
 
 
-def apply(conn, msg_id: int) -> bool:
-    row = conn.execute("SELECT proposal FROM pref_messages WHERE id = ? AND status = 'pending'", (msg_id,)).fetchone()
-    if not row:
-        return False
-    prefs, _ = current(conn)
-    save(conn, merge(prefs, json.loads(row["proposal"])), "chat")
-    conn.execute("UPDATE pref_messages SET status = 'applied' WHERE id = ?", (msg_id,))
-    conn.commit()
-    return True
-
-
-def discard(conn, msg_id: int) -> bool:
-    n = conn.execute("UPDATE pref_messages SET status = 'discarded' WHERE id = ? AND status = 'pending'",
-                     (msg_id,)).rowcount
-    conn.commit()
-    return bool(n)
-
-
 def show(key: str, value) -> str | None:
     """Human text for one preference, or None when it is not set."""
     _, kind, options = SCHEMA[key]
@@ -191,64 +172,10 @@ def describe_change(changes: dict) -> list[str]:
     return out
 
 
-def schema_for_prompt() -> str:
-    lines = []
-    for key, (label, kind, options) in SCHEMA.items():
-        if kind in ("choice", "multi"):
-            spec = f"{kind}, one of {list(options)}" if kind == "choice" else f"list, any of {list(options)}"
-        elif kind == "map":
-            spec = f"object mapping any of {list(options)} to one of {list(LEVELS)}"
-        elif kind == "int":
-            spec = f"integer {options[0]}-{options[1]}"
-        elif kind == "list":
-            spec = "list of short strings (send the complete new list)"
-        else:
-            spec = {"bool": "true or false", "text": "short string"}[kind]
-        lines.append(f"- {key} ({label}): {spec}")
-    return "\n".join(lines)
-
-
-HISTORY = 20
-OPENED = "(David just opened the Preferences page.)"
-
-
-def messages(conn) -> list[dict]:
-    """The current conversation: everything after the last 'new conversation' divider."""
-    start = conn.execute("SELECT COALESCE(MAX(id), 0) FROM pref_messages WHERE role = 'divider'").fetchone()[0]
-    return [dict(r) for r in conn.execute("SELECT * FROM pref_messages WHERE id > ? ORDER BY id", (start,))]
-
-
-def _add(conn, role: str, content: str, proposal: dict | None = None) -> dict:
-    cur = conn.execute("INSERT INTO pref_messages (role, content, proposal, status, created_at) VALUES (?, ?, ?, ?, ?)",
-                       (role, content, json.dumps(proposal, ensure_ascii=False) if proposal else None,
-                        "pending" if proposal else None, now_iso()))
-    conn.commit()
-    return dict(conn.execute("SELECT * FROM pref_messages WHERE id = ?", (cur.lastrowid,)).fetchone())
-
-
-def new_conversation(conn) -> None:
-    _add(conn, "divider", "")
-
-
-def _as_sent(m: dict) -> str:
-    """Past assistant turns go back as the JSON DeepSeek wrote; as plain text they make JSON mode return blanks."""
-    if m["role"] != "assistant":
-        return m["content"]
-    changes = json.loads(m["proposal"]) if m["proposal"] else None
-    return json.dumps({"reply": m["content"], "changes": changes}, ensure_ascii=False)
-
-
-def reply(conn, key: str, prompt: str, text: str) -> list[dict]:
-    """Send David's message (or, when empty, the page-opened cue) to DeepSeek; store and return the new messages."""
-    prefs, _ = current(conn)
-    system = (f"{prompt}\n\n## Preference fields\n{schema_for_prompt()}\n\n"
-              f"## Current preferences (json)\n{json.dumps(prefs, ensure_ascii=False)}\n\n"
-              f"## Not set yet\n{', '.join(missing(prefs)) or 'nothing, everything is set'}")
-    history = [{"role": m["role"], "content": _as_sent(m)} for m in messages(conn)][-HISTORY:]
-    history.append({"role": "user", "content": text or OPENED})
-    if history[0]["role"] != "user":
-        history.insert(0, {"role": "user", "content": OPENED})
-    data, _ = deepseek.chat_json(key, [{"role": "system", "content": system}, *history])
-    answer = str(data.get("reply") or "").strip() or "Sorry, I didn't catch that. Could you say it another way?"
-    new = [_add(conn, "user", text)] if text else []
-    return new + [_add(conn, "assistant", answer, validate(data.get("changes")))]
+def update(conn, changes) -> tuple[list[str], int]:
+    """Validate and apply a set of changes as a new version. Returns the described changes and the new version."""
+    valid = validate(changes)
+    if not valid:
+        return [], current(conn)[1]
+    p, _ = current(conn)
+    return describe_change(valid), save(conn, merge(p, valid), "claude")

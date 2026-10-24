@@ -1,12 +1,11 @@
 import json
 import re
 
-from .. import deepseek
 from ..config import ROOT
 from ..match.evaluate import digest
 from . import sources
 
-MODEL = "deepseek-v4-pro"
+MODEL = "claude-opus-5-5"
 NAME = "David Chen"
 WRITER = ROOT / "seeds" / "cv_writer_prompt.md"
 REVIEW = ROOT / "seeds" / "cv_review_prompt.md"
@@ -50,7 +49,7 @@ def _dicts(x, n: int) -> list[dict]:
 
 
 def clean_cv(data: dict) -> dict:
-    """Validate DeepSeek's CV JSON and cap its lengths; raise ValueError when it has no experience."""
+    """Validate a CV's JSON and cap its lengths; raise ValueError when it has no experience."""
     experience = [{"org": _plain(e.get("org"), 80), "title": _plain(e.get("title"), 80),
                    "dates": _plain(e.get("dates"), 60), "bullets": _plains(e.get("bullets"), 5)}
                   for e in _dicts(data.get("experience"), 6)]
@@ -120,7 +119,7 @@ def _repeated_figures(cv: dict) -> list[str]:
 
 
 def problems(cv: dict, ad: str = "") -> list[str]:
-    """Rule breaks the code can see. Truth is the recruiter pass's job. `ad` is the job message, for the years ask."""
+    """Rule breaks the code can see. Truth is the review's job. `ad` is the job message, for the years ask."""
     text = "\n".join(_strings({k: v for k, v in cv.items() if k != "notes"}))
     found = []
     if sources.EMAIL.search(text):
@@ -172,78 +171,6 @@ def job_message(job: dict, notes: dict | None) -> str:
         text += ("\n\n## Matcher notes (json)\n"
                  + json.dumps({k: notes.get(k) for k in NOTE_KEYS if notes.get(k)}, ensure_ascii=False))
     return text
-
-
-def _system(prompt) -> str:
-    """The source pack first and byte-stable, so DeepSeek's prefix cache covers it in every pass."""
-    return f"{sources.PACK.read_text()}\n\n{prompt.read_text()}"
-
-
-def _call(key: str, messages: list[dict]) -> tuple[dict, dict]:
-    return deepseek.chat_json(key, messages, model=MODEL, thinking=True, max_tokens=16000, timeout=300)
-
-
-def _write(key: str, user: str, usage: list[dict]) -> dict:
-    """One writer or reviser pass, retried once with the rule breaks named."""
-    messages = [{"role": "system", "content": _system(WRITER)}, {"role": "user", "content": user}]
-    data, u = _call(key, messages)
-    usage.append(u)
-    cv = clean_cv(data)
-    if found := problems(cv, user):
-        messages += [{"role": "assistant", "content": json.dumps(data, ensure_ascii=False)},
-                     {"role": "user", "content": "Your CV breaks these rules: " + "; ".join(found)
-                      + ". Return the whole corrected CV as the same json object."}]
-        data, u = _call(key, messages)
-        usage.append(u)
-        cv = clean_cv(data)
-        if found := problems(cv, user):
-            raise ValueError("the CV still breaks the rules: " + "; ".join(found))
-    return cv
-
-
-def _review(key: str, ad: str, cv: dict, usage: list[dict]) -> dict:
-    """The writer's notes are for David, not part of the CV, so the screener never sees them."""
-    shown = json.dumps({k: v for k, v in cv.items() if k != "notes"}, ensure_ascii=False)
-    data, u = _call(key, [{"role": "system", "content": _system(REVIEW)},
-                          {"role": "user", "content": f"{ad}\n\n## CV (json)\n{shown}"
-                                                      "\n\nReview this CV for this job."}])
-    usage.append(u)
-    return clean_review(data)
-
-
-def _revise(key: str, ad: str, cv: dict, review: dict, usage: list[dict]) -> dict:
-    return _write(key, f"{ad}\n\n## Your draft (json)\n{json.dumps(cv, ensure_ascii=False)}\n\n"
-                       f"## Recruiter review (json)\n{json.dumps(review, ensure_ascii=False)}\n\n"
-                       "Revise the CV using this review.", usage)
-
-
-def _needs_repair(review: dict) -> bool:
-    return bool(review["invented_claims"]) or any(i["severity"] == "must_fix" for i in review["issues"])
-
-
-def tailor(key: str, job: dict, notes: dict | None, stage=lambda s: None) -> dict:
-    """Writer → review → revision → screen of the final; when the screen finds an invented claim or a must_fix,
-    one repair revision and a second screen. Returns each result and all usage."""
-    usage: list[dict] = []
-    ad = job_message(job, notes)
-    stage("writing")
-    draft = _write(key, ad + "\n\nWrite David's CV for this job.", usage)
-    stage("reviewing")
-    review = _review(key, ad, draft, usage)
-    stage("revising")
-    final = _revise(key, ad, draft, review, usage)
-    stage("checking")
-    final_review = _review(key, ad, final, usage)
-    if _needs_repair(final_review):
-        stage("revising")
-        try:
-            repaired = _revise(key, ad, final, final_review, usage)
-        except ValueError:
-            repaired = None  # the repair broke a code rule twice; keep the screened version
-        if repaired:
-            stage("checking")
-            final, final_review = repaired, _review(key, ad, repaired, usage)
-    return {"draft": draft, "review": review, "final": final, "final_review": final_review, "usage": usage}
 
 
 def filename(job: dict) -> str:

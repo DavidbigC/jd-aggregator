@@ -1,32 +1,5 @@
-<section id="match-run" class="card match-run"{% if run %} hx-get="/shortlist/run/status" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
-  {% if run %}
-  <p><b>DeepSeek is scoring jobs…</b> {{ run.evaluated }} of {{ run.planned }} done{% if run.failed %} · {{ run.failed }} failed{% endif %} · ${{ '%.2f' | format(run.cost_usd) }} so far</p>
-  <p class="muted">About a minute per job, 8 at a time. You can leave this page; the shortlist reloads when it finishes.</p>
-  {% elif plan %}
-  {% set n = plan.todo | length %}
-  <details class="steps"><summary>Prefilter (free): <b>{{ plan.steps[-1][1] }}</b> jobs fit your preferences</summary>
-    <ol>{% for label, count in plan.steps %}<li>{{ label }}: {{ count }}</li>{% endfor %}</ol>
-  </details>
-  {% if n %}
-  <p><b>{{ n }}</b> of them are new or changed since DeepSeek last scored them. Scoring them with {{ plan.model }} costs about <b>${{ '%.2f' | format(plan.per_job * n) }}</b>{{ ' (peak price now; half price off-peak)' if plan.peak else ' (off-peak price)' }}.{% if plan.thin %} {{ plan.thin }} {{ 'has a very short ad' if plan.thin == 1 else 'have very short ads' }}; I'll try to fetch the full ad first.{% endif %}</p>
-  <div class="card-actions">
-    <button class="small" hx-post="/shortlist/run/start" hx-target="#match-run" hx-swap="outerHTML">Score {{ n }} jobs</button>
-    {% if n > sample %}<button class="ghost small" hx-post="/shortlist/run/start" hx-vals='{"limit": "{{ sample }}"}' hx-target="#match-run" hx-swap="outerHTML" title="Your labelled jobs go first, so you can see whether DeepSeek agrees with you">Try {{ sample }} first (~${{ '%.2f' | format(plan.per_job * sample) }})</button>{% endif %}
-    <button class="ghost small" hx-get="/shortlist/run/panel" hx-target="#match-run" hx-swap="outerHTML">Cancel</button>
-  </div>
-  {% else %}
-  <p>Everything that fits is already scored with your current preferences. Nothing to spend.</p>
-  <div class="card-actions"><button class="ghost small" hx-get="/shortlist/run/panel" hx-target="#match-run" hx-swap="outerHTML">OK</button></div>
-  {% endif %}
-  {% else %}
+<section id="match-run" class="card match-run">
   <div class="run-line">
-    {% if has_key %}
-    <button class="small" hx-post="/shortlist/run" hx-target="#match-run" hx-swap="outerHTML" hx-disabled-elt="this">Run matcher</button>
-    {% else %}
-    <button class="small" disabled>Run matcher</button> <span class="muted">Add your DeepSeek key in <a href="/settings">Settings</a> first.</span>
-    {% endif %}
-    <span class="muted">{% if last %}Last run {{ last.started_at | ago }}: {{ last.evaluated }} scored{% if last.failed %}, {{ last.failed }} failed{% endif %}, ${{ '%.2f' | format(last.cost_usd) }}{% if last.status == 'interrupted' %} (interrupted){% elif last.status == 'error' %} ({{ last.error }}){% endif %}{% else %}DeepSeek scores each job against your profile and preferences. Checking costs nothing; you confirm before anything is spent.{% endif %}</span>
+    <span class="muted">{% if waiting %}<b>{{ waiting }}</b> job{{ 's are' if waiting != 1 else ' is' }} new or changed and waiting to be scored. {% endif %}Claude scores jobs in Claude Code{% if last %} · last run {{ last.started_at | ago }}: {{ last.evaluated }} scored{% if last.failed %}, {{ last.failed }} refused{% endif %}{% endif %}.</span>
   </div>
-  {% endif %}
-  {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
 </section>

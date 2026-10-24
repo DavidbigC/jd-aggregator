@@ -1,6 +1,0 @@
-<div id="chat-log" class="chat-log">
-  {% for m in msgs %}{% include "_chat_msg.html" %}{% endfor %}
-  {% if not msgs and has_key %}
-  <div class="msg assistant muted" hx-post="/preferences/chat" hx-trigger="load" hx-swap="outerHTML">DeepSeek is getting ready…</div>
-  {% endif %}
-</div>

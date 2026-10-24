@@ -1,7 +1,7 @@
 <section id="deepseek" class="card"
          {% if key_set and not checked %}hx-post="/settings/deepseek/test" hx-trigger="load" hx-swap="outerHTML"{% endif %}>
   <h2>DeepSeek API key</h2>
-  <p class="muted">DeepSeek runs the preferences chat and scores jobs. The key is kept in your Mac's Keychain, never in the database.</p>
+  <p class="muted">Not used at the moment: Claude scores jobs and writes CVs. The key stays here in case you want DeepSeek back. It is kept in your Mac's Keychain, never in the database.</p>
   {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
   {% if key_set %}
   <p class="card-msg">

@@ -4,16 +4,13 @@
 {% if r.missing_keywords %}<p><b>Missing keywords:</b> {{ r.missing_keywords | join(' · ') }}</p>{% endif %}
 {% if r.invented_claims %}<p><b>Claims it said weren't in your master CV:</b> {{ r.invented_claims | join(' · ') }}</p>{% endif %}
 {% endmacro %}
-<section id="cv-{{ job.id }}" class="cv-box"{% if c and c.status == 'running' %} hx-get="/jobs/{{ job.id }}/cv/section" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+<section id="cv-{{ job.id }}" class="cv-box">
   <h3>Tailored CV</h3>
-  {% if c and c.status == 'running' %}
-  <p><b>DeepSeek is {{ {'queued': 'about to start', 'writing': 'writing your CV', 'reviewing': 'reviewing it as a recruiter', 'revising': 'revising it', 'checking': 'screening the final version'}[c.stage] or 'working' }}…</b></p>
-  <p class="muted">Write, a tough recruiter review, a revision, then a recruiter screen of the final, and one repair if it still finds a problem: about 5–8 minutes. You can keep browsing; it carries on in the background.</p>
-  {% elif c and c.status == 'done' %}
+  {% if c and c.status == 'done' %}
   {% set f = c.final_review %}
   {% if f %}
   <p class="cv-score">Recruiter screen of this CV: <b>{{ f.score }}/100</b> · {{ 'would forward' if f.would_shortlist else 'not forwarded yet' }}{% if f.verdict %} — {{ f.verdict }}{% endif %} <span class="muted">(first draft {{ c.review.score }})</span></p>
-  {% if f.invented_claims %}<p class="card-msg bad">Check before sending — the screen says these go beyond your master CV{{ ' (score capped at 40)' if f.score <= 40 }}: {{ f.invented_claims | join(' · ') }}. Edit them in the copied Markdown, or press Rewrite.</p>{% endif %}
+  {% if f.invented_claims %}<p class="card-msg bad">Check before sending — the screen says these go beyond your master CV{{ ' (score capped at 40)' if f.score <= 40 }}: {{ f.invented_claims | join(' · ') }}. Edit them in the copied Markdown, or ask Claude to rewrite it.</p>{% endif %}
   {% if f.issues %}
   <details class="sl-notes">
     <summary class="muted">Still weak ({{ f.issues | length }}): what a screener or interviewer may push on</summary>
@@ -30,13 +27,12 @@
   </details>
   {% endif %}
   {% if c.final.notes %}<p class="muted cv-note">Writer's note: {{ c.final.notes }}</p>{% endif %}
-  {% if stale %}<p class="muted cv-note">Made from an older master CV or prompt. Rewrite to refresh it.</p>{% endif %}
+  {% if stale %}<p class="muted cv-note">Made from an older master CV, prompt or model. Ask Claude to refresh it.</p>{% endif %}
   <div class="card-actions">
     <a class="btn small" href="/jobs/{{ job.id }}/cv.pdf">Download PDF</a>
     <a class="ghost small" href="/jobs/{{ job.id }}/cv" target="_blank" rel="noopener">Open ↗</a>
     <button class="ghost small" type="button" onclick="navigator.clipboard.writeText(document.getElementById('cv-md-{{ job.id }}').value).then(() => this.textContent = 'Copied')">Copy as Markdown</button>
-    {% if has_key %}<button class="ghost small" hx-post="/jobs/{{ job.id }}/cv" hx-target="#cv-{{ job.id }}" hx-swap="outerHTML" hx-disabled-elt="this">Rewrite (~${{ '%.2f' | format(cv_est) }})</button>{% endif %}
-    <span class="muted small-print">{{ c.finished_at | ago }} · ${{ '%.3f' | format(c.cost_usd) }}</span>
+    <span class="muted small-print">{{ c.finished_at | ago }} · {{ c.model }}</span>
   </div>
   <p class="muted cv-note">{% if pdf.exists() %}PDF saved for uploading: <code>{{ pdf | tilde }}</code>{% else %}Download PDF saves it to <code>{{ pdf.parent | tilde }}</code> for uploading.{% endif %}
     <button class="ghost small" hx-post="/jobs/{{ job.id }}/cv/reveal" hx-swap="none">Show in Finder</button></p>
@@ -44,13 +40,8 @@
   <iframe class="cv-frame" src="/jobs/{{ job.id }}/cv?embed=1" title="Tailored CV" onload="this.style.height = this.contentDocument.documentElement.scrollHeight + 'px'"></iframe>
   {% else %}
   {% if c and c.status == 'error' %}<p class="card-msg bad">The last attempt failed: {{ c.error }}</p>{% endif %}
-  {% if has_key %}
-  <button class="small" hx-post="/jobs/{{ job.id }}/cv" hx-target="#cv-{{ job.id }}" hx-swap="outerHTML" hx-disabled-elt="this">Tailor my CV for this job (~${{ '%.2f' | format(cv_est) }}, about 5–8 minutes)</button>
-  <p class="muted">DeepSeek writes it from your master CV (devmaster-cv), a tough recruiter pass reviews it, a revision applies the fixes, and a last recruiter screen scores the final.</p>
-  {% else %}
-  <p class="muted">Add your DeepSeek key in <a href="/settings">Settings</a> to tailor a CV for this job.</p>
+  <p class="muted">No tailored CV yet. Ask Claude in Claude Code to write one: it is written from your master CV (devmaster-cv), reviewed as a recruiter would, and checked by the app's rules.</p>
   {% endif %}
-  {% endif %}
-  {% if not contact %}<p class="muted cv-note">Your CVs have no phone or email yet. Add a contact line in <a href="/settings">Settings</a>; it is never sent to DeepSeek.</p>{% endif %}
+  {% if not contact %}<p class="muted cv-note">Your CVs have no phone or email yet. Add a contact line in <a href="/settings">Settings</a>; it is added only when the CV is printed.</p>{% endif %}
   {% if error %}<p class="card-msg bad">{{ error }}</p>{% endif %}
 </section>

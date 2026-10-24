@@ -6,7 +6,6 @@ DATA_DIR = Path(os.environ.get("JD_AGGREGATOR_DATA", ROOT / "data"))
 DB_PATH = DATA_DIR / "jd_aggregator.db"
 SEED_CSV = ROOT / "seeds" / "boards.csv"
 SECTORS_CSV = ROOT / "seeds" / "company_sectors.csv"
-PREFS_PROMPT = ROOT / "seeds" / "prefs_assistant_prompt.md"
 # The audited master CV that tailored CVs are written from (docs/decisions/0006).
 CV_SOURCE_DIR = Path(os.environ.get("JD_AGGREGATOR_CV_DIR", Path.home() / "job_related" / "devmaster-cv"))
 # Every finished CV is saved here as a PDF, ready to upload to job sites.

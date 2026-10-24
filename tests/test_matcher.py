@@ -3,7 +3,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from jd_aggregator import deepseek, enrich, keystore, prefs
+from jd_aggregator import enrich, prefs
 from jd_aggregator.db import connect
 from jd_aggregator.ingest import ingest
 from jd_aggregator.match import evaluate, import_results, prefilter, set_label
@@ -88,7 +88,7 @@ def test_verdict_rules(kw, expected):
     assert evaluate.verdict(evaluate.clean(_result(**kw))) == expected
 
 
-def test_rescore_rederives_verdicts_and_priority_without_deepseek(conn):
+def test_rescore_rederives_verdicts_and_priority(conn):
     ingest(conn, [Posting(source="jobstash", source_job_id=str(i), company="Acme", title=t)
                   for i, t in enumerate(["Analyst", "Hand scored", "Short ad"])])
     a, h, s = (r[0] for r in conn.execute("SELECT id FROM jobs ORDER BY id"))
@@ -121,28 +121,9 @@ def test_clean_drops_bad_values_and_unquoted_knockouts():
         evaluate.clean({"scores": {"recruiter": 1}})
 
 
-def test_messages_keep_the_profile_prefix_stable():
-    job = {"title": "Data Analyst", "company": "Acme", "locations": [], "place": "remote", "salary": None,
-           "posted_at": None, "description": AD}
-    a = evaluate.messages(job, prefs.DEFAULTS)
-    b = evaluate.messages({**job, "title": "Other"}, {**prefs.DEFAULTS, "hours": "uk_eu"})
-    assert a[0] == b[0] and "Candidate profile" in a[0]["content"] and "json" in a[0]["content"]
-    assert "Data Analyst" in a[1]["content"] and '"hours": "uk_eu"' in b[1]["content"]
-
-
 @pytest.fixture
 def app_db(tmp_path, monkeypatch):
-    monkeypatch.setattr(keystore, "get_key", lambda: ("sk-test0123456789abcdef", "keychain"))
     monkeypatch.setattr(enrich, "_fetch", lambda http, title, urls: (None, "no-url"))
-    calls = []
-
-    def fake_chat(key, messages, **kw):
-        calls.append(kw["model"])
-        return _result(apply_notes=["Mention the word CANDYSHOP"]), {"prompt_cache_hit_tokens": 4000,
-                                                                     "prompt_cache_miss_tokens": 1000,
-                           "completion_tokens": 3000}
-
-    monkeypatch.setattr(deepseek, "chat_json", fake_chat)
     db = tmp_path / "m.db"
     conn = connect(db)
     ingest(conn, [Posting(source="cryptojobslist", source_job_id=str(i), company=c, title=t, posted_at=now_iso(),
@@ -152,90 +133,53 @@ def app_db(tmp_path, monkeypatch):
     conn.execute("UPDATE companies SET sector = 'crypto'")
     conn.commit()
     ids = dict(conn.execute("SELECT c.name, j.id FROM jobs j JOIN companies c ON c.id = j.company_id").fetchall())
-    conn.close()
-    return TestClient(create_app(db, sectors_csv=tmp_path / "s.csv")), db, ids, calls
+    return TestClient(create_app(db, sectors_csv=tmp_path / "s.csv")), conn, ids
 
 
-def _wait():
-    if matcher._thread:
-        matcher._thread.join(10)
+def _answers(*job_ids, **kw):
+    return [{"job_id": i, **_result(apply_notes=["Mention the word CANDYSHOP"], **kw)} for i in job_ids]
 
 
-def test_run_asks_before_spending_then_scores_in_background(app_db):
-    client, db, ids, calls = app_db
-    r = client.post("/shortlist/run")
-    assert "<b>3</b> of them are new or changed" in r.text and "Score 3 jobs" in r.text and calls == []
-
-    r = client.post("/shortlist/run/start")
-    _wait()
-    assert calls == ["deepseek-v4-pro", "deepseek-v4-pro"]
-    conn = connect(db)
+def test_todo_then_results_score_with_the_code_rules(app_db):
+    client, conn, ids = app_db
+    assert "<b>3</b> jobs are new or changed and waiting to be scored" in client.get("/shortlist").text
+    work = matcher.todo(conn)
+    assert sorted(j["title"] for j in work["jobs"]) == ["On-chain Analyst", "Product Data Analyst"]
+    assert work["needs_ad"] == 1 and set(work["jobs"][0]) == set(matcher.JOB_KEYS) and work["prefs"]["focus"]
     rows = {r["job_id"]: dict(r) for r in conn.execute("SELECT * FROM match_evaluations")}
-    assert rows[ids["Kamino"]]["verdict"] == "apply_now" and rows[ids["Kamino"]]["model"] == "deepseek-v4-pro"
     assert rows[ids["Tiny"]]["verdict"] == "needs_ad" and ids["Acme"] not in rows
+
+    saved, refused = matcher.save_results(conn, _answers(ids["Kamino"], ids["Dune"])
+                                          + [{"job_id": 999999, **_result()}, {"job_id": ids["Acme"], "scores": {}}])
+    assert saved == 2 and refused[0] == "job 999999: no such job" and "bad scores" in refused[1]
+    row = conn.execute("SELECT * FROM match_evaluations WHERE job_id = ?", (ids["Kamino"],)).fetchone()
+    assert (row["verdict"], row["model"], row["rec"]) == ("apply_now", "claude-opus-5-5", 70)
+    assert row["description_hash"] == evaluate.digest(AD) and row["run"].startswith("claude-")
     run = matcher.last_run(conn)
-    assert (run["status"], run["planned"], run["evaluated"], run["failed"]) == ("done", 3, 3, 0)
-    assert run["cost_usd"] > 0
+    assert (run["status"], run["planned"], run["evaluated"], run["failed"], run["cost_usd"]) == ("done", 4, 2, 2, 0)
 
-    assert client.get("/shortlist/run/status").headers.get("HX-Refresh") == "true"
     page = client.get("/shortlist").text
-    assert "Scored by deepseek-v4-pro" in page and "DeepSeek's notes" in page and "Last run" in page
-    assert "To apply</span> Mention the word CANDYSHOP" in page
-
-    r = client.post("/shortlist/run")
-    assert "already scored" in r.text
+    assert "Scored by claude-opus-5-5" in page and "Matcher notes" in page and "last run" in page
+    assert "To apply</span> Mention the word CANDYSHOP" in page and "waiting to be scored" not in page
+    assert matcher.todo(conn)["jobs"] == []
+    assert client.post("/shortlist/run").status_code in (404, 405)
 
 
 def test_rescoring_keeps_labels_and_follows_preference_changes(app_db):
-    client, db, ids, calls = app_db
-    client.post("/shortlist/run/start")
-    _wait()
-    conn = connect(db)
+    client, conn, ids = app_db
+    matcher.save_results(conn, _answers(ids["Kamino"], ids["Dune"]))
     set_label(conn, ids["Dune"], "N", "not for me")
     prefs.save(conn, {**prefs.current(conn)[0], "hours": "uk_eu"}, "test")
-    assert "<b>3</b> of them are new or changed" in client.post("/shortlist/run").text
-    client.post("/shortlist/run/start", data={"limit": "1"})
-    _wait()
-    first = conn.execute("SELECT job_id, label FROM match_evaluations WHERE prefs_version = 1").fetchall()
+    assert len(matcher.todo(conn)["jobs"]) == 2
+    matcher.save_results(conn, _answers(ids["Dune"]))
+    first = conn.execute("SELECT job_id, label FROM match_evaluations WHERE prefs_version = 1 "
+                         "AND verdict != 'needs_ad'").fetchall()
     assert [tuple(r) for r in first] == [(ids["Dune"], "N")]
     assert "agrees with <b>0 of 1</b>" in client.get("/shortlist").text
 
 
-def test_already_running_guard(app_db, monkeypatch):
-    client, db, _, _ = app_db
-
-    class Alive:
-        def is_alive(self):
-            return True
-
-    monkeypatch.setattr(matcher, "_thread", Alive())
-    with pytest.raises(matcher.AlreadyRunning):
-        matcher.start(db, "sk-x")
-    assert "already in progress" in client.post("/shortlist/run/start").text
-
-
-def test_stale_running_row_is_marked_interrupted(app_db, monkeypatch):
-    client, db, _, _ = app_db
-    monkeypatch.setattr(matcher, "_thread", None)
-    conn = connect(db)
-    conn.execute("INSERT INTO match_runs (started_at, status, model, planned) VALUES (?, 'running', 'm', 5)",
-                 (now_iso(),))
-    conn.commit()
-    page = client.get("/shortlist").text
-    assert "Run matcher" in page and "(interrupted)" in page
-
-
-def test_run_button_disabled_without_key(app_db, monkeypatch):
-    client, *_ = app_db
-    monkeypatch.setattr(keystore, "get_key", lambda: (None, "keychain"))
-    page = client.get("/shortlist").text
-    assert "<button class=\"small\" disabled>Run matcher</button>" in page
-    assert "Settings first" in client.post("/shortlist/run/start").text
-
-
-def test_hand_scored_rows_need_deepseek(app_db):
-    _, db, ids, _ = app_db
-    conn = connect(db)
+def test_scoring_stamps(app_db):
+    _, conn, ids = app_db
     stamp = evaluate.stamps(0)
     job = {"description": AD}
     assert matcher.needs_scoring(None, job, stamp)
@@ -244,5 +188,6 @@ def test_hand_scored_rows_need_deepseek(app_db):
     row = {"description_hash": evaluate.digest(AD), **stamp}
     assert not matcher.needs_scoring(row, job, stamp)
     assert matcher.needs_scoring({**row, "prefs_version": 1}, job, stamp)
+    assert matcher.needs_scoring({**row, "model": "deepseek-v4-pro"}, job, stamp)
     assert matcher.needs_scoring(row, {"description": AD + "changed"}, stamp)
-    assert json.loads(json.dumps(stamp))["model"] == "deepseek-v4-pro"
+    assert json.loads(json.dumps(stamp))["model"] == "claude-opus-5-5"

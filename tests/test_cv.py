@@ -1,10 +1,8 @@
 import json
-import time
 
 import pytest
 from fastapi.testclient import TestClient
 
-from jd_aggregator import deepseek, keystore
 from jd_aggregator.cv import CONTACT, pdf, set_setting, sources, tailor
 from jd_aggregator.cv import runner as cvs
 from jd_aggregator.web import app as web
@@ -132,100 +130,56 @@ def test_markdown_follows_the_devmaster_layout():
 
 
 @pytest.fixture
-def fake_deepseek(monkeypatch):
-    calls = []
-    replies = {"write": [_cv()], "review": [REVIEW]}
-
-    def fake_chat(key, messages, **kw):
-        calls.append(messages)
-        kind = "review" if "in-house recruiter" in messages[0]["content"] else "write"
-        queue = replies[kind]
-        data = queue.pop(0) if len(queue) > 1 else queue[0]
-        return data, {"prompt_cache_hit_tokens": 25000, "prompt_cache_miss_tokens": 3000, "completion_tokens": 5000}
-
-    monkeypatch.setattr(deepseek, "chat_json", fake_chat)
-    return calls, replies
-
-
-def _job():
-    return {"title": "Product Data Analyst", "company": "Kamino", "locations": ["Remote"], "description": AD}
-
-
-def test_tailor_runs_four_passes_with_a_stable_prefix(fake_deepseek):
-    calls, replies = fake_deepseek
-    replies["review"] = [REVIEW, {**REVIEW, "score": 81, "issues": []}]
-    out = tailor.tailor("sk-x", _job(), {"lead_with": ["Dragon Race retention +25%"], "scores": {"want": 90}})
-    assert len(calls) == 4 and out["review"]["score"] == 72 and out["review"]["would_shortlist"] is True
-    assert out["final_review"]["score"] == 81 and out["final"]["headline"] in calls[3][1]["content"]
-    assert "Led with retention." not in calls[1][1]["content"] + calls[3][1]["content"]
-    assert out["review"]["issues"][0]["severity"] == "must_fix"
-    pack = sources.PACK.read_text()
-    assert all(c[0]["content"].startswith(pack) for c in calls)
-    assert calls[0][0] == calls[2][0]
-    assert "Dragon Race retention +25%" in calls[0][1]["content"] and '"want"' not in calls[0][1]["content"]
-    assert "Recruiter review (json)" in calls[2][1]["content"]
-
-
-def test_a_failed_final_screen_gets_one_repair(fake_deepseek):
-    calls, replies = fake_deepseek
-    flagged = {**REVIEW, "score": 90, "issues": [], "invented_claims": ["decision memos"]}
-    replies["review"] = [REVIEW, flagged, {**REVIEW, "score": 80, "issues": []}, flagged]
-    out = tailor.tailor("sk-x", _job(), None)
-    assert len(calls) == 6 and out["final_review"]["score"] == 80
-    assert "decision memos" in calls[4][1]["content"]
-    replies["review"] = [REVIEW, flagged]
-    replies["write"] = [_cv(), _cv(), _cv(summary="He did it")]
-    out = tailor.tailor("sk-x", _job(), None)
-    assert out["final_review"]["score"] == 40 and out["final"]["summary"] == _cv()["summary"]
-
-
-def test_tailor_retries_once_on_a_leak_then_fails(fake_deepseek):
-    calls, replies = fake_deepseek
-    replies["write"] = [_cv(summary="He did it"), _cv()]
-    tailor.tailor("sk-x", _job(), None)
-    assert len(calls) == 7 and "pronoun 'He'" in calls[1][-1]["content"]
-    replies["write"] = [_cv(summary="mail d@x.com")]
-    with pytest.raises(ValueError, match="email"):
-        tailor.tailor("sk-x", _job(), None)
-
-
-@pytest.fixture
-def app(tmp_path, monkeypatch, fake_deepseek):
-    monkeypatch.setattr(keystore, "get_key", lambda: ("sk-test0123456789abcdef", "keychain"))
+def app(tmp_path):
     db = tmp_path / "cv.db"
     conn = connect(db)
     ingest(conn, [Posting(source="cryptojobslist", source_job_id=str(i), company=c, title=t, posted_at=now_iso(),
                           locations=["Remote (Anywhere)"], remote=True, description=AD)
                   for i, (c, t) in enumerate([("Kamino", "Product Data Analyst"), ("Dune", "On-chain Analyst")])])
     ids = dict(conn.execute("SELECT c.name, j.id FROM jobs j JOIN companies c ON c.id = j.company_id").fetchall())
-    import_results(conn, [{"job_id": i, "verdict": "apply_now", "rec": 70, "hm": 70, "want": 70,
-                           "result": json.dumps({"lead_with": ["x"]})} for i in ids.values()], run="t")
-    conn.close()
-    return TestClient(create_app(db, sectors_csv=tmp_path / "s.csv")), db, ids, fake_deepseek[0]
+    import_results(conn, [{"job_id": i, "verdict": "apply_now", "rec": 70, "hm": 70 + 20 * n, "want": 70,
+                           "result": json.dumps({"lead_with": ["x"]})} for n, i in enumerate(ids.values())], run="t")
+    return TestClient(create_app(db, sectors_csv=tmp_path / "s.csv")), conn, ids
 
 
-def _wait():
-    for _ in range(200):
-        with cvs._lock:
-            if not cvs._active:
-                return
-        time.sleep(0.02)
+def _written(job_id, **kw):
+    return {"job_id": job_id, "draft": _cv(summary="First draft."), "review": REVIEW, "final": _cv(**kw),
+            "final_review": {**REVIEW, "score": 81, "issues": REVIEW["issues"][:1]}}
 
 
-def test_job_pane_tailors_and_shows_the_cv(app):
-    client, db, ids, calls = app
+def test_todo_lists_shortlisted_jobs_that_need_a_cv(app):
+    client, conn, ids = app
+    work = cvs.todo(conn)
+    assert [w["job_id"] for w in work] == [ids["Dune"], ids["Kamino"]]
+    assert work[1]["file"] == "David Chen - Kamino Product Data Analyst"
+    assert "Title: Product Data Analyst" in work[1]["message"] and '"lead_with": ["x"]' in work[1]["message"]
+    assert "<b>2</b> need a new or refreshed CV" in client.get("/shortlist").text
+    cvs.save(conn, _written(ids["Kamino"]))
+    assert cvs.todo_ids(conn) == [ids["Dune"]]
+    conn.execute("UPDATE tailored_cvs SET model = 'deepseek-v4-pro'")
+    conn.commit()
+    assert cvs.todo_ids(conn) == [ids["Dune"], ids["Kamino"]]
+    assert "Ask Claude to refresh it" in client.get(f"/jobs/{ids['Kamino']}/cv/section").text
+
+
+def test_save_checks_the_rules_then_shows_the_cv(app):
+    client, conn, ids = app
     kamino = ids["Kamino"]
     page = client.get(f"/jobs/{kamino}", headers={"HX-Request": "true"}).text
-    assert "Tailor my CV for this job" in page and "never sent to DeepSeek" in page
+    assert "No tailored CV yet. Ask Claude" in page and "Tailor my CV" not in page
     assert client.get(f"/jobs/{kamino}/cv").status_code == 404
+    assert client.post(f"/jobs/{kamino}/cv").status_code == 405
+
+    rid, found = cvs.save(conn, _written(kamino, summary="He did it; mail d@x.com"))
+    assert rid is None and any("email" in f for f in found) and any("pronoun" in f for f in found)
+    rid, found = cvs.save(conn, _written(kamino))
+    assert rid and found == []
 
     client.post("/settings/cv-contact", data={"contact": CONTACT_LINE})
-    client.post(f"/jobs/{kamino}/cv")
-    _wait()
-    assert all(CONTACT_LINE not in m["content"] and "7700" not in m["content"] for c in calls for m in c)
     section = client.get(f"/jobs/{kamino}/cv/section").text
-    assert "Recruiter screen of this CV: <b>72/100</b>" in section and "(first draft 72)" in section
-    assert "Still weak (2)" in section and "Bury the lead" in section and "Copy as Markdown" in section
+    assert "Recruiter screen of this CV: <b>81/100</b>" in section and "(first draft 72)" in section
+    assert "Still weak (1)" in section and "Bury the lead" in section and "Copy as Markdown" in section
+    assert "claude-opus-5-5" in section and "Rewrite" not in section and "Ask Claude to refresh" not in section
     assert f'src="/jobs/{kamino}/cv?embed=1"' in section and "# David Chen" in section
     printed = client.get(f"/jobs/{kamino}/cv").text
     assert "<title>David Chen - Kamino Product Data Analyst</title>" in printed and "/static/resume.css" in printed
@@ -233,62 +187,42 @@ def test_job_pane_tailors_and_shows_the_cv(app):
     assert "<h3>FLOKI | Data Analyst | Dec 2024 – Apr 2026</h3>" in printed
     assert "Print / Save as PDF" not in client.get(f"/jobs/{kamino}/cv?embed=1").text
 
-    conn = connect(db)
-    row = conn.execute("SELECT status, score, cost_usd, draft, final, final_review FROM tailored_cvs").fetchone()
-    assert row["status"] == "done" and row["score"] == 72 and row["cost_usd"] > 0 and row["draft"] and row["final"]
-    assert json.loads(row["final_review"])["score"] == 72
-
-
-def test_failed_and_interrupted_cvs_show_an_error(app, fake_deepseek):
-    client, db, ids, _ = app
-    fake_deepseek[1]["write"] = [_cv(summary="mail d@x.com")]
-    client.post(f"/jobs/{ids['Dune']}/cv")
-    _wait()
-    assert "The last attempt failed" in client.get(f"/jobs/{ids['Dune']}/cv/section").text
-    conn = connect(db)
-    conn.execute("INSERT INTO tailored_cvs (job_id, created_at, status, stage, model) VALUES (?, ?, 'running', 'writing', 'm')",
-                 (ids["Kamino"], now_iso()))
-    conn.commit()
-    assert "Interrupted when the app restarted" in client.get(f"/jobs/{ids['Kamino']}/cv/section").text
-
-
-def test_shortlist_batch_asks_then_tailors(app):
-    client, db, ids, calls = app
+    row = conn.execute("SELECT status, score, cost_usd, model, draft, final, final_review FROM tailored_cvs").fetchone()
+    assert (row["status"], row["score"], row["cost_usd"], row["model"]) == ("done", 81, 0, "claude-opus-5-5")
+    assert json.loads(row["draft"])["summary"] == "First draft." and json.loads(row["final_review"])["score"] == 81
     page = client.get("/shortlist").text
-    assert "Tailor CVs for 2 shortlisted jobs" in page and calls == []
-    assert "Tailor 2 CVs" in client.post("/shortlist/cv").text and calls == []
-    client.post("/shortlist/cv/start")
-    _wait()
-    assert len(calls) == 12
-    page = client.get("/shortlist").text
-    assert "2 shortlisted jobs have a tailored CV" in page and page.count("CV ready</span>") == 2
+    assert "1 shortlisted job has a tailored CV" in page and page.count("CV ready</span>") == 1
+
+
+def test_draft_and_review_default_to_the_final(app):
+    _, conn, ids = app
+    cvs.save(conn, {"job_id": ids["Dune"], "final": _cv(), "final_review": REVIEW})
+    row = conn.execute("SELECT draft, final, review, final_review FROM tailored_cvs").fetchone()
+    assert row["draft"] == row["final"] and row["review"] == row["final_review"]
 
 
 def test_contact_line_is_saved_locally(app):
-    client, db, *_ = app
+    client, conn, _ = app
     assert "Saved" in client.post("/settings/cv-contact", data={"contact": "  a   b "}).text
     assert 'value="a b"' in client.get("/settings").text
-    set_setting(connect(db), CONTACT, "")
+    set_setting(conn, CONTACT, "")
     assert 'value=""' in client.get("/settings").text
 
 
-def test_flagged_claims_show_up_front(app, fake_deepseek):
-    client, db, ids, _ = app
-    flagged = {**REVIEW, "score": 90, "issues": [], "invented_claims": ["decision memos"]}
-    fake_deepseek[1]["review"] = [REVIEW, flagged, flagged]
-    client.post(f"/jobs/{ids['Dune']}/cv")
-    _wait()
+def test_flagged_claims_show_up_front(app):
+    client, conn, ids = app
+    cvs.save(conn, {**_written(ids["Dune"]), "final_review": {**REVIEW, "score": 90, "issues": [],
+                                                              "invented_claims": ["decision memos"]}})
     section = client.get(f"/jobs/{ids['Dune']}/cv/section").text
     assert "<b>40/100</b>" in section and "Check before sending" in section and "(score capped at 40): decision memos" in section
 
 
-def test_finished_cvs_are_saved_as_pdfs(app, cv_folder, monkeypatch):
-    client, db, ids, _ = app
+def test_saved_cvs_become_pdfs(app, cv_folder, monkeypatch):
+    client, conn, ids = app
     opened = []
     monkeypatch.setattr(web.subprocess, "run", lambda args, **kw: opened.append(args))
     client.post("/settings/cv-contact", data={"contact": CONTACT_LINE})
-    client.post(f"/jobs/{ids['Kamino']}/cv")
-    _wait()
+    cvs.save(conn, _written(ids["Kamino"]))
     saved = cv_folder / "David Chen - Kamino Product Data Analyst.pdf"
     body = saved.read_bytes().decode()
     assert body.startswith("%PDF") and CONTACT_LINE in body and "font-size: 9.5pt" in body and "Print / Save" not in body
@@ -308,10 +242,9 @@ def test_finished_cvs_are_saved_as_pdfs(app, cv_folder, monkeypatch):
 
 
 def test_a_pdf_failure_keeps_the_cv(app, cv_folder, monkeypatch):
-    client, db, ids, _ = app
+    client, conn, ids = app
     monkeypatch.setattr(pdf, "render", lambda html: 1 / 0)
-    client.post(f"/jobs/{ids['Dune']}/cv")
-    _wait()
+    assert cvs.save(conn, _written(ids["Dune"]))[0]
     section = client.get(f"/jobs/{ids['Dune']}/cv/section").text
     assert "Recruiter screen of this CV" in section and "Download PDF saves it to" in section
     assert not cv_folder.exists()

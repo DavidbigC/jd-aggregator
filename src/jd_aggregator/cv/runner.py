@@ -1,28 +1,12 @@
 import json
 import logging
-import threading
-from concurrent.futures import ThreadPoolExecutor
-from contextlib import closing
-from datetime import datetime, timezone
 
-from ..db import connect
 from ..match import SHOWN
-from ..match.runner import cost
 from ..normalize import now_iso
 from . import CONTACT, get_setting, pdf, sources, tailor
 
-WORKERS = 4
-# Tokens for one CV (writer, review, reviser, final screen, usually a repair and a second screen), measured on the
-# first real CVs: the pack is ~26k tokens and cached after the first call; with thinking, each pass writes 5–10k tokens.
-EST_HIT, EST_MISS, EST_OUT = 150000, 40000, 48000
 log = logging.getLogger(__name__)
-_pool = ThreadPoolExecutor(WORKERS, thread_name_prefix="cv")
-_lock = threading.Lock()
-_active: set[int] = set()
-
-
-def estimate(when: datetime | None = None) -> float:
-    return cost(tailor.MODEL, EST_HIT, EST_MISS, EST_OUT, when or datetime.now(timezone.utc))
+STAMP_KEYS = ("model", "prompt_version", "sources_hash")
 
 
 def _row(r) -> dict:
@@ -33,29 +17,22 @@ def _row(r) -> dict:
 
 
 def latest(conn, job_id: int) -> dict | None:
-    """The newest CV for a job. A running row with no live worker (server restart) becomes an error."""
     r = conn.execute("SELECT * FROM tailored_cvs WHERE job_id = ? ORDER BY id DESC LIMIT 1", (job_id,)).fetchone()
-    if not r:
-        return None
-    with _lock:
-        lost = r["status"] == "running" and r["id"] not in _active
-    if lost:
-        conn.execute("UPDATE tailored_cvs SET status = 'error', error = ?, finished_at = ? WHERE id = ?",
-                     ("Interrupted when the app restarted. Press Tailor again.", now_iso(), r["id"]))
-        conn.commit()
-        return latest(conn, job_id)
-    return _row(r)
+    return _row(r) if r else None
+
+
+def is_stale(cv: dict, stamp: dict) -> bool:
+    return any(cv[k] != stamp[k] for k in STAMP_KEYS)
 
 
 def view(conn, job: dict) -> dict:
     """Everything the CV section and the print page need."""
     cv = latest(conn, job["id"])
     contact = get_setting(conn, CONTACT)
-    out = {"cv": cv, "contact": contact, "cv_est": estimate(), "stale": False, "markdown": "", "links": []}
+    out = {"cv": cv, "contact": contact, "stale": False, "markdown": "", "links": []}
     if cv and cv["status"] == "done":
-        stamp = tailor.stamps()
         out["links"] = sources.links(sources.PACK.read_text())
-        out["stale"] = (cv["prompt_version"], cv["sources_hash"]) != (stamp["prompt_version"], stamp["sources_hash"])
+        out["stale"] = is_stale(cv, tailor.stamps())
         out["markdown"] = tailor.to_markdown(cv["final"], contact, out["links"])
         out["filename"] = tailor.filename(job)
         out["pdf"] = pdf.location(out)
@@ -66,41 +43,22 @@ def ready(conn) -> set[int]:
     return {r[0] for r in conn.execute("SELECT DISTINCT job_id FROM tailored_cvs WHERE status = 'done'")}
 
 
-def running_count(conn) -> int:
-    with _lock:
-        ids = list(_active)
-    return conn.execute(f"SELECT COUNT(*) FROM tailored_cvs WHERE status = 'running' AND id IN ({','.join('?' * len(ids))})",
-                        ids).fetchone()[0] if ids else 0
-
-
-def batch_todo(conn) -> list[int]:
-    """Shortlisted jobs without a CV that is done or being written."""
-    return [r[0] for r in conn.execute(
-        f"SELECT m.job_id FROM match_evaluations m WHERE m.verdict IN ({', '.join('?' * len(SHOWN))}) "
-        "AND NOT EXISTS (SELECT 1 FROM tailored_cvs t WHERE t.job_id = m.job_id AND t.status IN ('done', 'running')) "
-        "ORDER BY m.priority DESC", SHOWN)]
-
-
-def start(db_path, key: str, job_ids: list[int]) -> int:
-    """Queue a CV for each job that isn't already being written; returns how many were queued."""
+def todo_ids(conn) -> list[int]:
+    """Shortlisted jobs, best first, whose CV is missing or made with an older model, prompt or master CV."""
     stamp = tailor.stamps()
-    queued = []
-    with closing(connect(db_path)) as conn:
-        for job_id in job_ids:
-            cv = latest(conn, job_id)
-            if cv and cv["status"] == "running":
-                continue
-            rid = conn.execute(
-                "INSERT INTO tailored_cvs (job_id, created_at, status, stage, model, prompt_version, sources_hash) "
-                "VALUES (?, ?, 'running', 'queued', ?, ?, ?)",
-                (job_id, now_iso(), stamp["model"], stamp["prompt_version"], stamp["sources_hash"])).lastrowid
-            queued.append((rid, job_id))
-        conn.commit()
-    with _lock:
-        _active.update(rid for rid, _ in queued)
-    for rid, job_id in queued:
-        _pool.submit(_run, db_path, key, rid, job_id)
-    return len(queued)
+    ids = [r[0] for r in conn.execute(
+        f"SELECT job_id FROM match_evaluations WHERE verdict IN ({', '.join('?' * len(SHOWN))}) "
+        "ORDER BY priority DESC", SHOWN)]
+    return [i for i in ids if not ((cv := latest(conn, i)) and cv["status"] == "done" and not is_stale(cv, stamp))]
+
+
+def todo(conn) -> list[dict]:
+    """What Claude needs to write each CV: the job message the writer and reviewer prompts expect."""
+    out = []
+    for job_id in todo_ids(conn):
+        job, notes = _job(conn, job_id)
+        out.append({"job_id": job_id, "file": tailor.filename(job), "message": tailor.job_message(job, notes)})
+    return out
 
 
 def _job(conn, job_id: int) -> tuple[dict, dict | None]:
@@ -119,37 +77,26 @@ def save_pdf(conn, job_id: int):
     return pdf.save(v) if v["cv"] and v["cv"]["status"] == "done" else None
 
 
-def _run(db_path, key: str, rid: int, job_id: int) -> None:
-    with closing(connect(db_path)) as conn:
-        def stage(s):
-            conn.execute("UPDATE tailored_cvs SET stage = ? WHERE id = ?", (s, rid))
-            conn.commit()
-
-        out = None
-        try:
-            job, notes = _job(conn, job_id)
-            out = tailor.tailor(key, job, notes, stage)
-        except Exception as e:
-            log.exception("tailored CV %d for job %d failed", rid, job_id)
-            conn.execute("UPDATE tailored_cvs SET status = 'error', error = ?, finished_at = ? WHERE id = ?",
-                         (f"{type(e).__name__}: {e}"[:300], now_iso(), rid))
-            conn.commit()
-        if out:
-            now = datetime.now(timezone.utc)
-            usd = sum(cost(tailor.MODEL, u.get("prompt_cache_hit_tokens", 0), u.get("prompt_cache_miss_tokens", 0),
-                           u.get("completion_tokens", 0), now) for u in out["usage"])
-            conn.execute(
-                "UPDATE tailored_cvs SET status = 'done', stage = NULL, finished_at = ?, draft = ?, review = ?, "
-                "final = ?, final_review = ?, score = ?, cost_usd = ? WHERE id = ?",
-                (now_iso(), *(json.dumps(out[k], ensure_ascii=False) for k in ("draft", "review", "final", "final_review")),
-                 out["final_review"]["score"], usd, rid))
-            conn.commit()
-            log.info("tailored CV %d for job %d done: score %d (draft %d), $%.3f, %d calls", rid, job_id,
-                     out["final_review"]["score"], out["review"]["score"], usd, len(out["usage"]))
-            try:
-                save_pdf(conn, job_id)
-            except Exception:
-                log.exception("PDF for tailored CV %d failed; Download PDF on the job retries", rid)
-    with _lock:
-        _active.discard(rid)
-
+def save(conn, data: dict) -> tuple[int | None, list[str]]:
+    """Store a CV Claude wrote ({job_id, final, final_review, draft?, review?}) and save its PDF. A CV that breaks
+    a code rule is refused with the reasons, so it can be fixed and saved again."""
+    job, notes = _job(conn, data["job_id"])
+    final = tailor.clean_cv(data["final"])
+    if found := tailor.problems(final, tailor.job_message(job, notes)):
+        return None, found
+    final_review = tailor.clean_review(data["final_review"])
+    draft = tailor.clean_cv(data["draft"]) if data.get("draft") else final
+    review = tailor.clean_review(data["review"]) if data.get("review") else final_review
+    stamp, now = tailor.stamps(), now_iso()
+    rid = conn.execute(
+        "INSERT INTO tailored_cvs (job_id, created_at, finished_at, status, model, prompt_version, sources_hash, "
+        "draft, review, final, final_review, score, cost_usd) VALUES (?, ?, ?, 'done', ?, ?, ?, ?, ?, ?, ?, ?, 0)",
+        (data["job_id"], now, now, *(stamp[k] for k in STAMP_KEYS),
+         *(json.dumps(x, ensure_ascii=False) for x in (draft, review, final, final_review)),
+         final_review["score"])).lastrowid
+    conn.commit()
+    try:
+        save_pdf(conn, data["job_id"])
+    except Exception:
+        log.exception("PDF for tailored CV %d failed; Download PDF on the job retries", rid)
+    return rid, []
