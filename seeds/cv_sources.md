@@ -185,6 +185,10 @@ This repo is a structured master CV datasource. To generate a tailored CV from a
 - Helped manage delivery for the trading web terminal from early research through implementation support
 - Coordinated development efforts through sprint-style planning and focused working sessions
 - Aligned stakeholders and contributors around feature direction and execution priorities
+- Also covered business analysis: worked closely with the product manager to gather user feedback and turn it into feature requirements
+- Backend access and a working knowledge of how the product backend is built, used to judge which features users asked for and what the system could support
+- Researched competing wallets and trading apps (retention, hooks and growth mechanics) to inform wallet and trading-product design
+- Traded meme coins myself to understand how the user base trades — user research, not speculation
 - Competitor analysis: identified gaps and translated findings into recommendations for new features, campaigns, and system improvements
 - Market and on-chain intelligence; whale / protocol / token metric monitoring
 - Trading bot analytics support: monitoring, behaviour analysis, and product feedback loops
