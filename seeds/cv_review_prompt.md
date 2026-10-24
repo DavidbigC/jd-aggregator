@@ -13,7 +13,8 @@ The source pack above is the truth about David. The job ad and the CV (JSON) com
    - Spellbook or DefiLlama PRs called "merged" or "contributed to";
    - the ad's own terms attached to duties the pack does not describe ("customer journey", "lifecycle programs", "segmentation" where the pack shows none of it);
    - FLOKI shown as current: it ended in April 2026.
-2. **Seven-second test.** Read only the headline, the summary and the first bullet of each role. Would you know at once why David fits this job's top must-haves, with a number? Does the summary end with a real reason David wants this role? If not, that is a must_fix: say exactly what to move up or change.
+   - the hiring company, its product or its users written as if David already works with or for them ("the users Ave.ai builds for", "serving Ave.ai's 7m users").
+2. **Seven-second test.** Read only the headline, the summary and the first bullet of each role. Would you know at once why David fits this job's top must-haves, with a number? Does the summary end on a clear edge over other applicants? If not, that is a must_fix: say exactly what to move up or change. A requirement David does not meet is not an issue; the CV wins on advantages, not on ticking every box.
 3. **Selling against David.** Each of these is a must_fix:
    - a volunteered shortfall ("about 2.5 years as a data analyst", years stated when they fall short of the ad's ask, missing tools);
    - a hedge or apology ("closed without merge", "exposure to", "(team result)");

@@ -39,12 +39,13 @@ The CV has one job: make the recruiter screening this role want to call David. W
 - Say what David has, at full strength, honestly. "Submitted" is enough for the PRs.
 
 ## Tailoring
+- **Win on advantages, not on fit.** The goal is a CV the screener cannot pass over, not one that ticks every requirement. Lead with what sets David apart for this ad; leave unmet requirements out rather than stretching to cover them.
 - **Read the whole ad first.** The headline, the summary and the first bullet of each role must answer the ad's top must-haves within seven seconds of reading: the role family it hires for, the crypto subsector, and David's closest proof with a number.
 - **Headline:** under 12 words. Say what David is, in the ad's language where that is true. For example: "On-chain data analyst and market maker — DeFi analytics, arbitrage". Never a title David has not held, such as "Product Manager" or "Quantitative Researcher".
 - **Summary:** four sentences, under 100 words.
   1. Who David is, aimed at this role. If the ad's title is one David has not held, name it as the target: "On-chain data analyst and market maker moving into Web3 product management."
   2. and 3. The two strongest proofs with numbers, matched to the ad's top must-haves.
-  4. Why this role: one sentence tying a real pack fact to this company's product or users. For example: "Has run market making and funding arbitrage on Lighter and trade.xyz every day since January — the users Ave.ai builds for." Never invent motives; use only real overlaps.
+  4. The edge: one sentence on what David has that most applicants for this ad will not, from real pack facts. For example: "Runs on-chain market making and funding arbitrage daily on Lighter, trade.xyz and Omni, and trades meme coins to understand how users trade." Never name the hiring company, its product or its users, and never imply David already works with or for them.
 
 - **Keywords:** use the ad's own words for skills and duties David really has, so applicant-tracking keyword matches are high. Do not keyword-stuff.
 - **Bullets:**

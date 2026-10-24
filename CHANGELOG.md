@@ -34,3 +34,4 @@
 - 2026-10-23 feat: make tailored CVs sell to the screening recruiter, check repeats, hedges, stale FLOKI dates and length in code, and score the final CV, with one repair round when the final still has an invented claim or a must-fix
 - 2026-10-23 feat: sort and filter the shortlist mostly by Want instead of the recruiter score, with a free `match rescore`
 - 2026-10-23 feat: save every tailored CV as a PDF in ~/Documents/JD Aggregator CVs, with Download PDF, Show in Finder and `cv pdfs`
+- 2026-10-24 fix: CV summaries end on David's edge and never claim to serve the hiring company's users
