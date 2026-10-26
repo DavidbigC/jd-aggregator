@@ -48,6 +48,7 @@ Crypto data analyst with product and growth analytics experience at three crypto
 
 ### Product (secondary target)
 - Helped manage delivery of FLOKI's web trading terminal from research through implementation support; sprint-style planning with developers; stakeholder alignment; feature viability research; competitor-gap recommendations.
+- FLOKI business analysis: worked closely with the product manager to gather user feedback and turn it into feature requirements; backend access and a working knowledge of how the product backend is built; researched competing wallets and trading apps (retention, hooks, growth mechanics) to inform wallet and trading-product design; traded meme coins personally to understand how the user base trades (user research).
 - Limito (2024–2025, hands-on): a CLAMM limit-order product with a Node.js backend, Next.js frontend and a Uniswap hook in Foundry.
 - 2026: product owner of David's own trading consoles and an AI financial research agent (mytradfiagent, live, 33+ tools): decided what to build and ship; AI agents built it.
 - Gap: no PM title; product work sat inside analyst roles and independent projects.
